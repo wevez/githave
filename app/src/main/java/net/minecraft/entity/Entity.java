@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import githave.util.AlgebraUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -1105,6 +1106,11 @@ public abstract class Entity implements ICommandSender
         this.rotationYaw = yaw;
         this.rotationPitch = pitch;
         this.setPosition(this.posX, this.posY, this.posZ);
+    }
+
+    public double getNearestDistanceToEntity(Entity entity) {
+        Vec3 nearest = AlgebraUtil.nearest(entity.boundingBox, this.getPositionEyes(1f));
+        return this.getDistance(nearest.xCoord, nearest.yCoord, nearest.zCoord);
     }
 
     public float getDistanceToEntity(Entity entityIn)

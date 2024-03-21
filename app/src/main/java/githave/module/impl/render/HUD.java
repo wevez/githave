@@ -15,7 +15,7 @@ public class HUD extends Module {
 
     @Override
     public void init() {
-        font = TTFFontRenderer.of("Roboto-Light", 20);
+        font = TTFFontRenderer.of("Roboto-Regular", 20);
         super.init();
     }
 
@@ -25,9 +25,19 @@ public class HUD extends Module {
 
     @Override
     public void onRenderGui(Events.PreRenderGui event) {
-        rect(5, 5, 200, 20, 0xb0000000);
-        rect(5, 5, 200, 2, 0xffEC1BF6);
-        font.drawString(String.format("%s %s | %s | %dfps | %s", GitHave.INSTANCE.name, GitHave.INSTANCE.version, "wevez", Minecraft.getDebugFPS(), ""), 7, 12, -1);
+        String formatted = String.format("%s %s | %s | %dfps | %s", GitHave.INSTANCE.name,
+                GitHave.INSTANCE.version, GitHave.INSTANCE.account, Minecraft.getDebugFPS(), getServerIp());
+        float wid = font.width(formatted);
+        rect(5, 5, wid + 14, 20, 0xb0505050);
+        rect(5, 5, wid + 14, 2, 0xff727888);
+        font.drawString(formatted, 7, 12, 0xffE0DFE2);
         super.onRenderGui(event);
+    }
+
+    private String getServerIp() {
+        if (mc.isSingleplayer()) {
+            return "Single";
+        }
+        return mc.getCurrentServerData().serverIP;
     }
 }

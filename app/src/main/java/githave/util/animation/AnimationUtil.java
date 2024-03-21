@@ -14,5 +14,14 @@ public abstract class AnimationUtil {
         return this;
     }
 
+    public AnimationUtil setTick(double tick) {
+        // MathHelper.clamp makes bugs
+        tick = Math.min(tick, 1);
+        tick = Math.max(tick, 0);
+
+        this.tick = tick;
+        return this;
+    }
+
     public abstract double calcPercent();
 }

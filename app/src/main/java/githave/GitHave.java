@@ -10,7 +10,7 @@ public enum GitHave {
 
     INSTANCE;
 
-    public String name = "NightX", version = "0.01.0";
+    public String name = "GitHave", version = "1.0", account = "";
 
     public void init() {
         try {
@@ -24,6 +24,8 @@ public enum GitHave {
         }
         Display.setTitle(name + " " + version);
 
+        // TODO:
+        account = "dev";
         // Avoid no OpenGL context error
         clickGui = new ClickGui();
         moduleManager.init();

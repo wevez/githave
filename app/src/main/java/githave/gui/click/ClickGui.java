@@ -1,7 +1,11 @@
 package githave.gui.click;
 
+import githave.util.animation.AnimationUtil;
+import githave.util.animation.BackAnimation;
+import githave.util.render.Render2DUtil;
 import net.minecraft.client.gui.GuiScreen;
 import githave.module.ModuleCategory;
+import net.minecraft.client.renderer.GlStateManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +14,8 @@ import java.util.List;
 public class ClickGui extends GuiScreen {
 
     private final List<ClickGuiWindow> windows = new ArrayList<>();
+
+    private final AnimationUtil animationUtil = new BackAnimation();
 
     {
         float currentX = 50;
@@ -36,6 +42,12 @@ public class ClickGui extends GuiScreen {
     private float partialTicks;
 
     @Override
+    public void onGuiClosed() {
+        animationUtil.setTick(0);
+        super.onGuiClosed();
+    }
+
+    @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 //        super.drawScreen(mouseX, mouseY, partialTicks);
         this.mouseX = mouseX;
@@ -45,7 +57,14 @@ public class ClickGui extends GuiScreen {
 
     public void a() {
         super.drawScreen(mouseX, mouseY, partialTicks);
+        double per = animationUtil.uodate(0.05).calcPercent();
+        GlStateManager.pushMatrix();
+        Render2DUtil.setAlphaLimit((float) per);
+        GlStateManager.translate(mc.displayWidth / 4, mc.displayHeight / 4, 0);
+        GlStateManager.scale(per, per, 0);
+        GlStateManager.translate(-mc.displayWidth / 4, -mc.displayHeight / 4, 0);
         windows.forEach(c -> c.drawScreen(mouseX, mouseY, partialTicks));
+        GlStateManager.popMatrix();
     }
 
     @Override
