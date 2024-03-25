@@ -28,8 +28,8 @@ public class HUD extends Module {
         String formatted = String.format("%s %s | %s | %dfps | %s", GitHave.INSTANCE.name,
                 GitHave.INSTANCE.version, GitHave.INSTANCE.account, Minecraft.getDebugFPS(), getServerIp());
         float wid = font.width(formatted);
-        rect(5, 5, wid + 14, 20, 0xb0505050);
-        rect(5, 5, wid + 14, 2, 0xff727888);
+        rect(5, 5, wid + 4, 20, 0xb0151515);
+        rect(5, 5, wid + 4, 2, 0xff727888);
         font.drawString(formatted, 7, 12, 0xffE0DFE2);
         super.onRenderGui(event);
     }

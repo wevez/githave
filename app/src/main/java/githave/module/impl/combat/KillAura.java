@@ -2,7 +2,10 @@ package githave.module.impl.combat;
 
 import githave.event.Events;
 import githave.manager.rotation.RotationManager;
+import githave.util.RandomUtil;
+import githave.util.RotationUtil;
 import githave.util.TimerUtil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import githave.module.Module;
@@ -17,6 +20,7 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.util.Vec3;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -27,6 +31,14 @@ import java.util.stream.Collectors;
 public class KillAura extends Module {
 
     public static EntityLivingBase target;
+
+    private boolean allowToRot;
+
+    private final TimerUtil clickCheckTimer = new TimerUtil();
+    private int clicksIn;
+
+    private final TimerUtil randomTimer = new TimerUtil(), randomResetTimer = new TimerUtil();
+    private Vec3 randomOffset = new Vec3(RandomUtil.nextDouble(-0.1, 0.1), RandomUtil.nextDouble(-0.1, 0.1), RandomUtil.nextDouble(-0.1, 0.1));
 
     private Comparator<EntityLivingBase> currentComparator = Comparator.comparingDouble(e -> mc.thePlayer.getNearestDistanceToEntity(e));
 
@@ -64,9 +76,6 @@ public class KillAura extends Module {
             .visibility(() -> !blockMode.getValue().equals("None"))
             .build();
 
-    private final BooleanSetting throughWalls = new BooleanSetting.Builder("Through Walls")
-            .build();
-
     private final ModeSetting clickMode = new ModeSetting.Builder("Click Mode", "Normal", "Timing", "1.9+")
             .build();
 
@@ -81,7 +90,7 @@ public class KillAura extends Module {
     public KillAura() {
         super("KillAura", "Attacks entities around you", ModuleCategory.Combat);
         this.getSettingList().addAll(Arrays.asList(
-           targetMode, targets, teams, sortMode, blockMode, aimRange, attackRange, blockRange, throughWalls, clickMode, minCPS, maxCPS
+           targetMode, targets, teams, sortMode, blockMode, aimRange, attackRange, blockRange, clickMode, minCPS, maxCPS
         ));
     }
 
@@ -89,6 +98,7 @@ public class KillAura extends Module {
     protected void onEnable() {
         RotationManager.serverYaw = mc.thePlayer.rotationYaw;
         RotationManager.serverPitch = mc.thePlayer.rotationPitch;
+        allowToRot = false;
         super.onEnable();
     }
 
@@ -108,32 +118,85 @@ public class KillAura extends Module {
 
     @Override
     public void onTick(Events.Tick event) {
+        if (target == null) return;
+        if (clickCheckTimer.hasTimeElapsed(1000)) {
+            clickCheckTimer.reset();
+            clicksIn = 0;
+        }
+        if (clicksIn >= maxCPS.getValue()) return;
+        double centerCPS = this.minCPS.getValue() + (this.maxCPS.getValue() - this.minCPS.getValue()) / 2;
+        if (RandomUtil.percent((int) (100 * centerCPS / Minecraft.getDebugFPS()))) {
+            mc.clickMouse();
+            clicksIn++;
+        }
         super.onTick(event);
     }
 
     @Override
     public void onRenderRotation(Events.RenderRotation event) {
+        if (allowToRot && RotationManager.customRots) {
+            event.yaw = RotationManager.serverYaw;
+            event.pitch = RotationManager.serverPitch;
+        }
         super.onRenderRotation(event);
     }
 
     @Override
     public void onLook(Events.Look event) {
+        updateTarget();
+        RotationManager.customRots = target != null;
+        if (target != null) {
+            allowToRot = true;
+            if (randomTimer.hasTimeElapsed(100)) {
+                randomTimer.reset();
+                randomOffset = randomOffset.addVector(
+                  RandomUtil.nextDouble(0.5) * -(mc.thePlayer.motionX - target.motionX),
+                    RandomUtil.nextDouble(0.5) * -(mc.thePlayer.motionY - target.motionY),
+                    RandomUtil.nextDouble(0.5) * -(mc.thePlayer.motionZ - target.motionZ)
+                );
+            }
+            if (randomResetTimer.hasTimeElapsed(1000) && randomOffset.lengthVector() > 1) {
+                System.out.println("Reset");
+                randomResetTimer.reset();
+                randomOffset = new Vec3(RandomUtil.nextDouble(-0.1, 0.1), RandomUtil.nextDouble(-0.1, 0.1), RandomUtil.nextDouble(-0.1, 0.1));
+            }
+            float[] rot = RotationUtil.rotation(target.getPositionEyes(1f).add(randomOffset));
+            rot = RotationUtil.getFixedRotation(rot, new float[] { RotationManager.serverYaw, RotationManager.serverPitch});
+            mc.thePlayer.rotationYaw = rot[0];
+            mc.thePlayer.rotationPitch = rot[1];
+            RotationManager.serverYaw = rot[0];
+            RotationManager.serverPitch = rot[1];
+        }
+        if (allowToRot && RotationManager.customRots) {
+            event.yaw = RotationManager.serverYaw;
+            event.pitch = RotationManager.serverPitch;
+        }
         super.onLook(event);
     }
 
     @Override
     public void onJump(Events.Jump event) {
+        if (allowToRot && RotationManager.customRots) {
+            event.yaw = RotationManager.serverYaw;
+        }
         super.onJump(event);
     }
 
     @Override
     public void onMotion(Events.Motion event) {
+        if (allowToRot && RotationManager.customRots) {
+            event.yaw = RotationManager.serverYaw;
+            event.pitch = RotationManager.serverPitch;
+        }
         super.onMotion(event);
     }
 
     @Override
-    public void onMove(Events.Move event) {
-        super.onMove(event);
+    public void onMoveFlying(Events.MoveFlying event) {
+        if (allowToRot && RotationManager.customRots) {
+            event.yaw = RotationManager.serverYaw;
+        }
+        super.onMoveFlying(event);
     }
 
     private void unblock() {
@@ -144,7 +207,7 @@ public class KillAura extends Module {
 
     private void updateTarget() {
          List<EntityLivingBase> entry = mc.theWorld.loadedEntityList.stream()
-                .filter(e -> e instanceof EntityLivingBase && e.getNearestDistanceToEntity(mc.thePlayer) > aimRange.getValue())
+                .filter(e -> e instanceof EntityLivingBase && e.getNearestDistanceToEntity(mc.thePlayer) < aimRange.getValue())
                 .map(e -> (EntityLivingBase) e)
                 .filter(e -> {
                     if (e == mc.thePlayer) return false;
@@ -162,5 +225,7 @@ public class KillAura extends Module {
                 })
                  .sorted(currentComparator)
                 .collect(Collectors.toList());
+
+         target = entry.isEmpty() ? null : entry.get(0);
     }
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 public class MultiBooleanSetting extends ModuleSetting {
 
     private final Map<String, Boolean> value;
+    public boolean expand;
 
     protected MultiBooleanSetting(Builder builder) {
         super(builder);

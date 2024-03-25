@@ -8,6 +8,7 @@ import githave.module.setting.ModuleSetting;
 import githave.module.setting.impl.BooleanSetting;
 import githave.module.setting.impl.DoubleSetting;
 import githave.module.setting.impl.ModeSetting;
+import githave.module.setting.impl.MultiBooleanSetting;
 import githave.util.animation.AnimationUtil;
 import githave.util.animation.LinearAnimation;
 import githave.util.render.ClickUtil;
@@ -15,6 +16,8 @@ import githave.util.render.ColorUtil;
 import githave.util.render.StencilUtil;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static githave.util.render.Render2DUtil.*;
@@ -111,6 +114,27 @@ public class ClickGuiWindow {
                     }
                     offset += 14 * ms.getOption().length * p;
                     StencilUtil.uninitStencilBuffer();
+                } else if (s instanceof MultiBooleanSetting) {
+                    rect(x, offset, 125, 18, 0xff151519);
+                    rect(x + 5, offset + 2, 115, 14, 0xff0F0F11);
+                    rect(x + 5, offset + 2, 2, 14, 0xff35383E);
+                    rect(x + 118, offset + 2, 2, 14, 0xff35383E);
+                    setting.drawCenteredString(s.getName(), x + 62.5f, offset + 7, 0xffE0DFE2);
+                    offset += 18;
+                    MultiBooleanSetting ms = (MultiBooleanSetting) s;
+                    float cpOffset = offset;
+                    float p = (float) s.animation.uodate(ms.expand ? 0.1 : -0.1).calcPercent();
+                    StencilUtil.initStencilToWrite();
+                    rect(x, offset, 125, 14 * ms.getValue().size() * p, -1);
+                    StencilUtil.readStencilBuffer();
+                    for (Map.Entry<String, Boolean> entry : ms.getValue().entrySet()) {
+                        rect(x, cpOffset, 125, 18, 0xff151519);
+                        rect(x + 7, cpOffset - 2, 111, 14, 0xff202226);
+                        setting.drawCenteredString(entry.getKey(), x + 62.5f, cpOffset + 3, entry.getValue() ? getColor() : 0xffE0DFE2);
+                        cpOffset += 14;
+                    }
+                    offset += 14 * ms.getValue().size() * p;
+                    StencilUtil.uninitStencilBuffer();
                 }
             }
         }
@@ -167,6 +191,22 @@ public class ClickGuiWindow {
                         for (int mi = 0; mi < ms.getOption().length; mi++) {
                             if (ClickUtil.isHovered(x, offset, 125, 18, mouseX, mouseY)) {
                                 ms.setValue(mi);
+                                return;
+                            }
+                            offset += 14;
+                        }
+                    }
+                } else if (s instanceof MultiBooleanSetting) {
+                    MultiBooleanSetting ms = (MultiBooleanSetting) s;
+                    if (ClickUtil.isHovered(x, offset, 125, 18, mouseX, mouseY)) {
+                        ms.expand = !ms.expand;
+                        return;
+                    }
+                    offset += 18;
+                    if (ms.expand) {
+                        for (Map.Entry<String, Boolean> entry : ms.getValue().entrySet()) {
+                            if (ClickUtil.isHovered(x, offset, 125, 18, mouseX, mouseY)) {
+                                ms.getValue().put(entry.getKey(), !entry.getValue());
                                 return;
                             }
                             offset += 14;

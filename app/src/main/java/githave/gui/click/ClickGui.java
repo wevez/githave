@@ -27,6 +27,7 @@ public class ClickGui extends GuiScreen {
 
     @Override
     public void initGui() {
+        animationUtil.setTick(0.25);
         super.initGui();
     }
 
