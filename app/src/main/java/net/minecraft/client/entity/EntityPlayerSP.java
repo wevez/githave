@@ -1,5 +1,7 @@
 package net.minecraft.client.entity;
 
+import githave.manager.rotation.RotationManager;
+import githave.util.RotationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -42,13 +44,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatFileWriter;
 import net.minecraft.tileentity.TileEntitySign;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.IChatComponent;
-import net.minecraft.util.MovementInput;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.*;
 import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.World;
 import githave.GitHave;
@@ -130,11 +126,8 @@ public class EntityPlayerSP extends AbstractClientPlayer
     {
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0D, this.posZ)))
         {
-            Events.Update preEvent = new Events.Update(true);
-            GitHave.INSTANCE.eventManager.call(preEvent);
+            GitHave.INSTANCE.eventManager.call(new Events.Update(false));
             super.onUpdate();
-            Events.Update postEvent = new Events.Update(false);
-            GitHave.INSTANCE.eventManager.call(postEvent);
 
             if (this.isRiding())
             {
@@ -143,25 +136,17 @@ public class EntityPlayerSP extends AbstractClientPlayer
             }
             else
             {
-                Events.Motion motionEvent = new Events.Motion(true, this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround, this.isSneaking(), this.isSprinting());
-
-                GitHave.INSTANCE.eventManager.call(motionEvent);
-                this.onUpdateWalkingPlayer(motionEvent);
-
-                Events.Motion postMotionEvent = new Events.Motion(false, this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround, this.isSneaking(), this.isSprinting());
-                GitHave.INSTANCE.eventManager.call(postMotionEvent);
+                this.onUpdateWalkingPlayer();
             }
         }
     }
 
-    public void onUpdateWalkingPlayer(Events.Motion updateMotionEvent)
+    /**
+     * called every tick when the player is on foot. Performs all the things that normally happen during movement.
+     */
+    public void onUpdateWalkingPlayer()
     {
-        if (updateMotionEvent.isCanceled())
-        {
-            return;
-        }
-
-        boolean flag = updateMotionEvent.sneaking;
+        boolean flag = this.isSprinting();
 
         if (flag != this.serverSprintState)
         {
@@ -174,11 +159,10 @@ public class EntityPlayerSP extends AbstractClientPlayer
                 this.sendQueue.addToSendQueue(new C0BPacketEntityAction(this, C0BPacketEntityAction.Action.STOP_SPRINTING));
             }
 
-            this.reSprint = 1;
             this.serverSprintState = flag;
         }
 
-        boolean flag1 = updateMotionEvent.sprinting;
+        boolean flag1 = this.isSneaking();
 
         if (flag1 != this.serverSneakState)
         {
@@ -196,35 +180,36 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
         if (this.isCurrentViewEntity())
         {
-            double d0 = updateMotionEvent.x - this.lastReportedPosX;
-            double d1 = updateMotionEvent.y - this.lastReportedPosY;
-            double d2 = updateMotionEvent.z - this.lastReportedPosZ;
-            double d3 = (double)(updateMotionEvent.yaw - this.lastReportedYaw);
-            double d4 = (double)(updateMotionEvent.pitch - this.lastReportedPitch);
-            boolean flag2 = (d0 * d0 + d1 * d1 + d2 * d2 > (9.0E-4D) || this.positionUpdateTicks >= 20);
+            double d0 = this.posX - this.lastReportedPosX;
+            double d1 = this.getEntityBoundingBox().minY - this.lastReportedPosY;
+            double d2 = this.posZ - this.lastReportedPosZ;
+            double d3 = (double)(this.rotationYaw - this.lastReportedYaw);
+            double d4 = (double)(this.rotationPitch - this.lastReportedPitch);
+            boolean flag2 = d0 * d0 + d1 * d1 + d2 * d2 > 9.0E-4D || this.positionUpdateTicks >= 20;
             boolean flag3 = d3 != 0.0D || d4 != 0.0D;
 
             if (this.ridingEntity == null)
             {
                 if (flag2 && flag3)
                 {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(updateMotionEvent.x, updateMotionEvent.y, updateMotionEvent.z, updateMotionEvent.yaw, updateMotionEvent.pitch, updateMotionEvent.onGround));
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.rotationYaw, this.rotationPitch, this.onGround));
                 }
                 else if (flag2)
                 {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(updateMotionEvent.x, updateMotionEvent.y, updateMotionEvent.z, updateMotionEvent.onGround));
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
                 }
                 else if (flag3)
                 {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(updateMotionEvent.yaw, updateMotionEvent.pitch, updateMotionEvent.onGround));
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(this.rotationYaw, this.rotationPitch, this.onGround));
                 }
                 else
                 {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer(updateMotionEvent.onGround));
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
                 }
             }
             else
             {
+                this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, this.rotationYaw, this.rotationPitch, this.onGround));
                 flag2 = false;
             }
 
@@ -232,16 +217,16 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
             if (flag2)
             {
-                this.lastReportedPosX = updateMotionEvent.x;
-                this.lastReportedPosY = updateMotionEvent.y;
-                this.lastReportedPosZ = updateMotionEvent.z;
+                this.lastReportedPosX = this.posX;
+                this.lastReportedPosY = this.getEntityBoundingBox().minY;
+                this.lastReportedPosZ = this.posZ;
                 this.positionUpdateTicks = 0;
             }
 
             if (flag3)
             {
-                this.lastReportedYaw = updateMotionEvent.yaw;
-                this.lastReportedPitch = updateMotionEvent.pitch;
+                this.lastReportedYaw = this.rotationYaw;
+                this.lastReportedPitch = this.rotationPitch;
             }
         }
     }
@@ -288,6 +273,31 @@ public class EntityPlayerSP extends AbstractClientPlayer
         {
             this.setHealth(this.getHealth() - damageAmount);
         }
+    }
+
+    @Override
+    public void setAngles(float yaw, float pitch) {
+        float f = RotationManager.virtualPitch;
+        float f1 = RotationManager.virtualYaw;
+        RotationManager.virtualYaw = (float)((double)RotationManager.virtualYaw + (double)yaw * 0.15D);
+        RotationManager.virtualPitch = (float)((double)RotationManager.virtualPitch - (double)pitch * 0.15D);
+        RotationManager.virtualPitch = MathHelper.clamp_float(RotationManager.virtualPitch, -90.0F, 90.0F);
+        RotationManager.virtualPrevPitch += RotationManager.virtualPitch - f;
+        RotationManager.virtualPrevYaw += RotationManager.virtualYaw - f1;
+        //args.set(0, 0d);
+        //args.set(1, 0d);
+
+        final Events.Rotation rotationEvent = new Events.Rotation(
+                RotationManager.virtualYaw,
+                RotationManager.virtualPitch
+        );
+        GitHave.INSTANCE.eventManager.call(rotationEvent);
+
+        float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
+        rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
+        this.rotationYaw = rot[0];
+        this.rotationPitch = rot[1];
+        //super.setAngles(yaw, pitch);
     }
 
     public void closeScreen()

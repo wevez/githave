@@ -59,21 +59,6 @@ public class Events {
         }
     }
 
-    public static class Look extends EventArgument {
-
-        public float yaw, pitch;
-
-        public Look(float yaw, float pitch) {
-            this.yaw = yaw;
-            this.pitch = pitch;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onLook(this);
-        }
-    }
-
     public static class Move extends EventArgument {
 
         public final boolean pre;
@@ -103,32 +88,6 @@ public class Events {
         @Override
         public void call(EventListener listener) {
             listener.onUpdate(this);
-        }
-    }
-
-    public static class Motion extends EventArgument {
-
-        public final boolean pre;
-
-        public double x, y ,z;
-        public float yaw, pitch;
-        public boolean onGround, sneaking, sprinting;
-
-        public Motion(boolean pre, double x, double y, double z, float yaw, float pitch, boolean onGround, boolean sneaking, boolean sprinting) {
-            this.x = x;
-            this.pre = pre;
-            this.y = y;
-            this.z = z;
-            this.yaw = yaw;
-            this.pitch = pitch;
-            this.onGround = onGround;
-            this.sneaking = sneaking;
-            this.sprinting = sprinting;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onMotion(this);
         }
     }
 
@@ -190,6 +149,13 @@ public class Events {
     }
 
     public static class Rotation extends EventArgument {
+
+        public float yaw, pitch;
+
+        public Rotation(float yaw, float pitch) {
+            this.yaw = yaw;
+            this.pitch = pitch;
+        }
 
         @Override
         public void call(EventListener listener) {
@@ -276,21 +242,6 @@ public class Events {
         }
     }
 
-    public static class RenderRotation extends EventArgument {
-
-        public float yaw, pitch;
-
-        public RenderRotation(float yaw, float pitch) {
-            this.yaw = yaw;
-            this.pitch = pitch;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onRenderRotation(this);
-        }
-    }
-
     public static class RenderTileEntity extends EventArgument {
 
         public final TileEntity entity;
@@ -325,41 +276,6 @@ public class Events {
         @Override
         public void call(EventListener listener) {
             listener.onGround(this);
-        }
-    }
-
-    public static class MoveFlying extends EventArgument {
-
-        public float yaw;
-
-        public MoveFlying(float yaw, float strafe, float forward, float friction) {
-            this.yaw = yaw;
-            this.strafe = strafe;
-            this.forward = forward;
-            this.friction = friction;
-        }
-
-        public float strafe, forward, friction;
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onMoveFlying(this);
-        }
-    }
-
-    public static class Jump extends EventArgument {
-
-        public float yaw;
-        public double motionY;
-
-        public Jump(float yaw, double motionY) {
-            this.yaw = yaw;
-            this.motionY = motionY;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onJump(this);
         }
     }
 

@@ -1329,13 +1329,7 @@ public abstract class EntityLivingBase extends Entity
 
     protected void jump()
     {
-        Events.Jump event = new Events.Jump(this.rotationYaw, this.getJumpUpwardsMotion());
-        GitHave.INSTANCE.eventManager.call(event);
-
-        if(event.isCanceled())return;
-
-        float finalYaw = this instanceof EntityPlayerSP ? event.yaw : this.rotationYaw;
-        this.motionY = event.motionY;
+        this.motionY = (double)this.getJumpUpwardsMotion();
 
         if (this.isPotionActive(Potion.jump))
         {
@@ -1344,7 +1338,7 @@ public abstract class EntityLivingBase extends Entity
 
         if (this.isSprinting())
         {
-            float f = finalYaw * 0.017453292F;
+            float f = this.rotationYaw * 0.017453292F;
             this.motionX -= (double)(Math.sin(f) * 0.2F);
             this.motionZ += (double)(Math.cos(f) * 0.2F);
         }

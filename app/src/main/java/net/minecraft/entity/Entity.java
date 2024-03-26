@@ -5,6 +5,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
+import githave.manager.rotation.RotationManager;
 import githave.util.AlgebraUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -239,6 +240,12 @@ public abstract class Entity implements ICommandSender
     {
         this.rotationYaw = yaw % 360.0F;
         this.rotationPitch = pitch % 360.0F;
+        if (this instanceof EntityPlayerSP) {
+            RotationManager.virtualPitch = rotationPitch;
+            RotationManager.virtualPrevPitch = rotationPitch;
+            RotationManager.virtualPrevYaw = rotationYaw;
+            RotationManager.virtualYaw = rotationYaw;
+        }
     }
 
     public void setPosition(double x, double y, double z)
@@ -461,6 +468,7 @@ public abstract class Entity implements ICommandSender
             boolean flag = this.onGround && this.isSneaking() && this instanceof EntityPlayer;
 
             Events.SafeWalk event = new Events.SafeWalk();
+            event.safe = flag;
             GitHave.INSTANCE.eventManager.call(event);
 
             if (event.safe)
@@ -1025,13 +1033,6 @@ public abstract class Entity implements ICommandSender
 
     public void moveFlying(float strafe, float forward, float friction)
     {
-        Events.MoveFlying event = new Events.MoveFlying(this.rotationYaw, strafe, forward, friction);
-        GitHave.INSTANCE.eventManager.call(event);
-        if(event.isCanceled())return;
-        strafe = event.strafe;
-        forward = event.forward;
-        friction = event.friction;
-        float finalYaw = (this instanceof EntityPlayerSP) ? event.yaw : this.rotationYaw;
         float f = strafe * strafe + forward * forward;
 
         if (f >= 1.0E-4F)
@@ -1046,8 +1047,8 @@ public abstract class Entity implements ICommandSender
             f = friction / f;
             strafe = strafe * f;
             forward = forward * f;
-            float f1 = (float) Math.sin(finalYaw * (float)Math.PI / 180.0F);
-            float f2 = (float) Math.cos(finalYaw * (float)Math.PI / 180.0F);
+            float f1 = (float) Math.sin(this.rotationYaw * (float)Math.PI / 180.0F);
+            float f2 = (float) Math.cos(this.rotationYaw * (float)Math.PI / 180.0F);
             this.motionX += (double)(strafe * f2 - forward * f1);
             this.motionZ += (double)(forward * f2 + strafe * f1);
         }

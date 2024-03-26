@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
+
+import githave.manager.rotation.RotationManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.material.Material;
@@ -650,115 +652,94 @@ public class EntityRenderer implements IResourceManagerReloadListener
         }
     }
 
-    private void orientCamera(float partialTicks)
-    {
+    private void orientCamera(float partialTicks) {
         Entity entity = this.mc.getRenderViewEntity();
         float f = entity.getEyeHeight();
-        double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double)partialTicks;
-        double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double)partialTicks + (double)f;
-        double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double)partialTicks;
+        double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
+        double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double) partialTicks + (double) f;
+        double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
 
-        if (entity instanceof EntityLivingBase && ((EntityLivingBase)entity).isPlayerSleeping())
-        {
-            f = (float)((double)f + 1.0D);
+        if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping()) {
+            f = (float) ((double) f + 1.0D);
             GlStateManager.translate(0.0F, 0.3F, 0.0F);
 
-            if (!this.mc.gameSettings.debugCamEnable)
-            {
+            if (!this.mc.gameSettings.debugCamEnable) {
                 BlockPos blockpos = new BlockPos(entity);
                 IBlockState iblockstate = this.mc.theWorld.getBlockState(blockpos);
                 Block block = iblockstate.getBlock();
 
-                if (Reflector.ForgeHooksClient_orientBedCamera.exists())
-                {
-                    Reflector.callVoid(Reflector.ForgeHooksClient_orientBedCamera, new Object[] {this.mc.theWorld, blockpos, iblockstate, entity});
-                }
-                else if (block == Blocks.bed)
-                {
-                    int j = ((EnumFacing)iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
-                    GlStateManager.rotate((float)(j * 90), 0.0F, 1.0F, 0.0F);
+                if (Reflector.ForgeHooksClient_orientBedCamera.exists()) {
+                    Reflector.callVoid(Reflector.ForgeHooksClient_orientBedCamera, new Object[]{this.mc.theWorld, blockpos, iblockstate, entity});
+                } else if (block == Blocks.bed) {
+                    int j = ((EnumFacing) iblockstate.getValue(BlockBed.FACING)).getHorizontalIndex();
+                    GlStateManager.rotate((float) (j * 90), 0.0F, 1.0F, 0.0F);
                 }
 
-                GlStateManager.rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180.0F, 0.0F, -1.0F, 0.0F);
-                GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1.0F, 0.0F, 0.0F);
+                GlStateManager.rotate(RotationManager.virtualPrevYaw + (RotationManager.virtualYaw - RotationManager.virtualPrevYaw) * partialTicks + 180.0F, 0.0F, -1.0F, 0.0F);
+                GlStateManager.rotate(RotationManager.virtualPrevPitch + (RotationManager.virtualPitch - RotationManager.virtualPrevPitch) * partialTicks, -1.0F, 0.0F, 0.0F);
             }
-        }
-        else if (this.mc.gameSettings.thirdPersonView > 0)
-        {
-            double d3 = (double)(this.thirdPersonDistanceTemp + (this.thirdPersonDistance - this.thirdPersonDistanceTemp) * partialTicks);
+        } else if (this.mc.gameSettings.thirdPersonView > 0) {
+            double d3 = (double) (this.thirdPersonDistanceTemp + (this.thirdPersonDistance - this.thirdPersonDistanceTemp) * partialTicks);
 
-            if (this.mc.gameSettings.debugCamEnable)
-            {
-                GlStateManager.translate(0.0F, 0.0F, (float)(-d3));
-            }
-            else
-            {
-                float f1 = entity.rotationYaw;
-                float f2 = entity.rotationPitch;
+            if (this.mc.gameSettings.debugCamEnable) {
+                GlStateManager.translate(0.0F, 0.0F, (float) (-d3));
+            } else {
+                float f1 = RotationManager.virtualYaw;
+                float f2 = RotationManager.virtualPitch;
 
-                if (this.mc.gameSettings.thirdPersonView == 2)
-                {
+                if (this.mc.gameSettings.thirdPersonView == 2) {
                     f2 += 180.0F;
                 }
 
-                double d4 = (double)(-(float) Math.sin(f1 / 180.0F * (float)Math.PI) * (float) Math.cos(f2 / 180.0F * (float)Math.PI)) * d3;
-                double d5 = (double)((float) Math.cos(f1 / 180.0F * (float)Math.PI) * (float) Math.cos(f2 / 180.0F * (float)Math.PI)) * d3;
-                double d6 = (double)(-(float) Math.sin(f2 / 180.0F * (float)Math.PI)) * d3;
+                double d4 = (double) (-Math.sin(f1 / 180.0F * (float) Math.PI) * Math.cos(f2 / 180.0F * (float) Math.PI)) * d3;
+                double d5 = (double) (Math.cos(f1 / 180.0F * (float) Math.PI) * Math.cos(f2 / 180.0F * (float) Math.PI)) * d3;
+                double d6 = (double) (-Math.sin(f2 / 180.0F * (float) Math.PI)) * d3;
 
-                for (int i = 0; i < 8; ++i)
-                {
-                    float f3 = (float)((i & 1) * 2 - 1);
-                    float f4 = (float)((i >> 1 & 1) * 2 - 1);
-                    float f5 = (float)((i >> 2 & 1) * 2 - 1);
+                for (int i = 0; i < 8; ++i) {
+                    float f3 = (float) ((i & 1) * 2 - 1);
+                    float f4 = (float) ((i >> 1 & 1) * 2 - 1);
+                    float f5 = (float) ((i >> 2 & 1) * 2 - 1);
                     f3 = f3 * 0.1F;
                     f4 = f4 * 0.1F;
                     f5 = f5 * 0.1F;
-                    MovingObjectPosition movingobjectposition = this.mc.theWorld.rayTraceBlocks(new Vec3(d0 + (double)f3, d1 + (double)f4, d2 + (double)f5), new Vec3(d0 - d4 + (double)f3 + (double)f5, d1 - d6 + (double)f4, d2 - d5 + (double)f5));
+                    MovingObjectPosition movingobjectposition = this.mc.theWorld.rayTraceBlocks(new Vec3(d0 + (double) f3, d1 + (double) f4, d2 + (double) f5), new Vec3(d0 - d4 + (double) f3 + (double) f5, d1 - d6 + (double) f4, d2 - d5 + (double) f5));
 
-                    if (movingobjectposition != null)
-                    {
+                    if (movingobjectposition != null) {
                         double d7 = movingobjectposition.hitVec.distanceTo(new Vec3(d0, d1, d2));
 
-                        if (d7 < d3)
-                        {
+                        if (d7 < d3) {
                             d3 = d7;
                         }
                     }
                 }
 
-                if (this.mc.gameSettings.thirdPersonView == 2)
-                {
+                if (this.mc.gameSettings.thirdPersonView == 2) {
                     GlStateManager.rotate(180.0F, 0.0F, 1.0F, 0.0F);
                 }
 
-                GlStateManager.rotate(entity.rotationPitch - f2, 1.0F, 0.0F, 0.0F);
-                GlStateManager.rotate(entity.rotationYaw - f1, 0.0F, 1.0F, 0.0F);
-                GlStateManager.translate(0.0F, 0.0F, (float)(-d3));
-                GlStateManager.rotate(f1 - entity.rotationYaw, 0.0F, 1.0F, 0.0F);
-                GlStateManager.rotate(f2 - entity.rotationPitch, 1.0F, 0.0F, 0.0F);
+                GlStateManager.rotate(RotationManager.virtualPitch - f2, 1.0F, 0.0F, 0.0F);
+                GlStateManager.rotate(RotationManager.virtualYaw - f1, 0.0F, 1.0F, 0.0F);
+                GlStateManager.translate(0.0F, 0.0F, (float) (-d3));
+                GlStateManager.rotate(f1 - RotationManager.virtualYaw, 0.0F, 1.0F, 0.0F);
+                GlStateManager.rotate(f2 - RotationManager.virtualPitch, 1.0F, 0.0F, 0.0F);
             }
-        }
-        else
-        {
+        } else {
             GlStateManager.translate(0.0F, 0.0F, -0.1F);
         }
 
-        if (Reflector.EntityViewRenderEvent_CameraSetup_Constructor.exists())
-        {
-            if (!this.mc.gameSettings.debugCamEnable)
-            {
-                float f6 = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180.0F;
-                float f7 = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
+        if (Reflector.EntityViewRenderEvent_CameraSetup_Constructor.exists()) {
+            if (!this.mc.gameSettings.debugCamEnable) {
+                float f6 = RotationManager.virtualPrevYaw + (RotationManager.virtualYaw - RotationManager.virtualPrevYaw) * partialTicks + 180.0F;
+                float f7 = RotationManager.virtualPrevPitch + (RotationManager.virtualPitch - RotationManager.virtualPrevPitch) * partialTicks;
                 float f8 = 0.0F;
 
-                if (entity instanceof EntityAnimal)
-                {
-                    EntityAnimal entityanimal1 = (EntityAnimal)entity;
+                if (entity instanceof EntityAnimal) {
+                    EntityAnimal entityanimal1 = (EntityAnimal) entity;
                     f6 = entityanimal1.prevRotationYawHead + (entityanimal1.rotationYawHead - entityanimal1.prevRotationYawHead) * partialTicks + 180.0F;
                 }
 
                 Block block1 = ActiveRenderInfo.getBlockAtEntityViewpoint(this.mc.theWorld, entity, partialTicks);
-                Object object = Reflector.newInstance(Reflector.EntityViewRenderEvent_CameraSetup_Constructor, new Object[] {this, entity, block1, Float.valueOf(partialTicks), Float.valueOf(f6), Float.valueOf(f7), Float.valueOf(f8)});
+                Object object = Reflector.newInstance(Reflector.EntityViewRenderEvent_CameraSetup_Constructor, new Object[]{this, entity, block1, Float.valueOf(partialTicks), Float.valueOf(f6), Float.valueOf(f7), Float.valueOf(f8)});
                 Reflector.postForgeBusEvent(object);
                 f8 = Reflector.getFieldValueFloat(object, Reflector.EntityViewRenderEvent_CameraSetup_roll, f8);
                 f7 = Reflector.getFieldValueFloat(object, Reflector.EntityViewRenderEvent_CameraSetup_pitch, f7);
@@ -767,26 +748,21 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 GlStateManager.rotate(f7, 1.0F, 0.0F, 0.0F);
                 GlStateManager.rotate(f6, 0.0F, 1.0F, 0.0F);
             }
-        }
-        else if (!this.mc.gameSettings.debugCamEnable)
-        {
-            GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, 1.0F, 0.0F, 0.0F);
+        } else if (!this.mc.gameSettings.debugCamEnable) {
+            GlStateManager.rotate(RotationManager.virtualPrevPitch + (RotationManager.virtualPitch - RotationManager.virtualPrevPitch) * partialTicks, 1.0F, 0.0F, 0.0F);
 
-            if (entity instanceof EntityAnimal)
-            {
-                EntityAnimal entityanimal = (EntityAnimal)entity;
+            if (entity instanceof EntityAnimal) {
+                EntityAnimal entityanimal = (EntityAnimal) entity;
                 GlStateManager.rotate(entityanimal.prevRotationYawHead + (entityanimal.rotationYawHead - entityanimal.prevRotationYawHead) * partialTicks + 180.0F, 0.0F, 1.0F, 0.0F);
-            }
-            else
-            {
-                GlStateManager.rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180.0F, 0.0F, 1.0F, 0.0F);
+            } else {
+                GlStateManager.rotate(RotationManager.virtualPrevYaw + (RotationManager.virtualYaw - RotationManager.virtualPrevYaw) * partialTicks + 180.0F, 0.0F, 1.0F, 0.0F);
             }
         }
 
         GlStateManager.translate(0.0F, -f, 0.0F);
-        d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double)partialTicks;
-        d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double)partialTicks + (double)f;
-        d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double)partialTicks;
+        d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
+        d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double) partialTicks + (double) f;
+        d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
         this.cloudFog = this.mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
     }
 
@@ -1167,8 +1143,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
         }
     }
 
-    private final Events.Rotation rotationEvent = new Events.Rotation();
-
     public float getNightVisionBrightness(EntityLivingBase entitylivingbaseIn, float partialTicks)
     {
         int i = entitylivingbaseIn.getActivePotionEffect(Potion.nightVision).getDuration();
@@ -1232,9 +1206,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 this.smoothCamPitch = 0.0F;
                 this.mc.thePlayer.setAngles(f2, f3 * (float)i);
             }
-
-
-            GitHave.INSTANCE.eventManager.call(rotationEvent);
         }
 
         this.mc.mcProfiler.endSection();

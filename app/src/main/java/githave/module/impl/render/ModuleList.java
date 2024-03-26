@@ -35,7 +35,7 @@ public class ModuleList extends Module {
             animationsX[i] = new LinearAnimation();
         }
         sortedList = new ArrayList<>(GitHave.INSTANCE.moduleManager.getModules());
-        font = TTFFontRenderer.of("Roboto-Regular", 22);
+        font = TTFFontRenderer.of("Roboto-Regular", 20);
         sortedList.sort(Comparator.comparing(m -> -font.width(m.getName())));
         super.init();
     }

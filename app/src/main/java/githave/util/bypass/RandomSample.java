@@ -110,6 +110,6 @@ public class RandomSample implements MCHook {
     );
 
     public static float[] pickSample(float yaw) {
-        return SAMPLE.stream().min(Comparator.comparingDouble(c -> Math.abs(MathHelper.wrapAngleTo180_double(RotationManager.serverYaw - c.yaw)))).get().samepl;
+        return SAMPLE.stream().min(Comparator.comparingDouble(c -> Math.abs(MathHelper.wrapAngleTo180_double(mc.thePlayer.rotationYaw - c.yaw)))).get().samepl;
     }
 }

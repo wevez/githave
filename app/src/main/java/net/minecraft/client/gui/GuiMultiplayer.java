@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import de.florianmichael.viamcp.ViaMCP;
+import me.ksyz.accountmanager.gui.GuiAccountManager;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
@@ -82,6 +83,9 @@ public class GuiMultiplayer extends GuiScreen implements GuiYesNoCallback
 
     public void createButtons()
     {
+        buttonList.add(new GuiButton(
+                69, width - 106, 6, 100, 20, "Accounts"
+        ));
         this.buttonList.add(ViaMCP.INSTANCE.getAsyncVersionSlider());
         this.buttonList.add(this.btnEditServer = new GuiButton(7, this.width / 2 - 154, this.height - 28, 70, 20, I18n.format("selectServer.edit", new Object[0])));
         this.buttonList.add(this.btnDeleteServer = new GuiButton(2, this.width / 2 - 74, this.height - 28, 70, 20, I18n.format("selectServer.delete", new Object[0])));
@@ -124,6 +128,10 @@ public class GuiMultiplayer extends GuiScreen implements GuiYesNoCallback
     {
         if (button.enabled)
         {
+            if (button.id == 69) {
+                mc.displayGuiScreen(new GuiAccountManager(this));
+            }
+
             GuiListExtended.IGuiListEntry guilistextended$iguilistentry = this.serverListSelector.func_148193_k() < 0 ? null : this.serverListSelector.getListEntry(this.serverListSelector.func_148193_k());
 
             if (button.id == 2 && guilistextended$iguilistentry instanceof ServerListEntryNormal)

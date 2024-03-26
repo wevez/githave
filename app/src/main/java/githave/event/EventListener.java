@@ -10,13 +10,9 @@ public interface EventListener {
 
     default void onTimeDelay(Events.TimeDelay event) {}
 
-    default void onLook(Events.Look event) {}
-
     default void onMove(Events.Move event) {}
 
     default void onUpdate(Events.Update event) {}
-
-    default void onMotion(Events.Motion event) {}
 
     default void onChat(Events.Chat event) {}
 
@@ -40,17 +36,11 @@ public interface EventListener {
 
     default void onEntityRenderer(Events.EntityRenderer event) {}
 
-    default void onRenderRotation(Events.RenderRotation event) {}
-
     default void onRenderTileEntity(Events.RenderTileEntity event) {}
 
     default void onSafeWalk(Events.SafeWalk event) {}
 
     default void onGround(Events.Ground event) {}
-
-    default void onMoveFlying(Events.MoveFlying event) {}
-
-    default void onJump(Events.Jump event) {}
 
     default void onKnockback(Events.Knockback event) {}
 

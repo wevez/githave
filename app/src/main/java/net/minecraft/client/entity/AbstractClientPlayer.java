@@ -211,9 +211,6 @@ public abstract class AbstractClientPlayer extends EntityPlayer
     }
 
     public Vec3 getLook(float partialTicks)
-    {
-        Events.Look event = new Events.Look(this.rotationYaw, this.rotationPitch);
-        GitHave.INSTANCE.eventManager.call(event);
-        return this.getVectorForRotation(event.pitch, event.yaw);
+    { return this.getVectorForRotation(this.rotationPitch, this.rotationYaw);
     }
 }

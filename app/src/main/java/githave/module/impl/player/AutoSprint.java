@@ -11,8 +11,9 @@ public class AutoSprint extends Module {
     }
 
     @Override
-    public void onMotion(Events.Motion event) {
+    public void onUpdate(Events.Update event) {
+
         mc.gameSettings.keyBindSprint.pressed = true;
-        super.onMotion(event);
+        super.onUpdate(event);
     }
 }

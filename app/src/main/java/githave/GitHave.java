@@ -4,6 +4,7 @@ import de.florianmichael.viamcp.ViaMCP;
 import githave.event.EventManager;
 import githave.gui.click.ClickGui;
 import githave.module.ModuleManager;
+import me.ksyz.accountmanager.AccountManager;
 import org.lwjgl.opengl.Display;
 
 public enum GitHave {
@@ -13,6 +14,7 @@ public enum GitHave {
     public String name = "GitHave", version = "1.0", account = "";
 
     public void init() {
+        AccountManager.init();
         try {
             ViaMCP.create();
             // In case you want a version slider like in the Minecraft options, you can use this code here, please choose one of those:

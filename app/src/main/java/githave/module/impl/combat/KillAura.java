@@ -26,11 +26,7 @@ import java.util.stream.Collectors;
 
 public class KillAura extends Module {
 
-    public static EntityLivingBase target;
-
-    private boolean allowToRot;
-
-    private final IndependentCPS cpsTimer = new IndependentCPS(this.minCPS, this.maxCPS);
+    public static EntityLivingBase target;;
 
     private Comparator<EntityLivingBase> currentComparator = Comparator.comparingDouble(e -> mc.thePlayer.getNearestDistanceToEntity(e));
 
@@ -71,11 +67,11 @@ public class KillAura extends Module {
     private final ModeSetting clickMode = new ModeSetting.Builder("Click Mode", "Normal", "Timing", "1.9+")
             .build();
 
-    private final DoubleSetting minCPS = new DoubleSetting.Builder("Min CPS", 8, 0, 20, 0.1)
+    private final DoubleSetting minCPS = new DoubleSetting.Builder("Min CPS", 12, 0, 20, 0.1)
             .visibility(() -> !clickMode.getValue().equals("1.9+"))
             .build();
 
-    private final DoubleSetting maxCPS = new DoubleSetting.Builder("Max CPS", 12, 0, 20, 0.1)
+    private final DoubleSetting maxCPS = new DoubleSetting.Builder("Max CPS", 15, 0, 20, 0.1)
             .visibility(() -> !clickMode.getValue().equals("1.9+"))
             .build();
 
@@ -103,11 +99,16 @@ public class KillAura extends Module {
         ));
     }
 
+    private IndependentCPS cpsTimer;
+
+    @Override
+    public void init() {
+        cpsTimer = new IndependentCPS(this.minCPS, this.maxCPS);
+        super.init();
+    }
+
     @Override
     protected void onEnable() {
-        RotationManager.serverYaw = mc.thePlayer.rotationYaw;
-        RotationManager.serverPitch = mc.thePlayer.rotationPitch;
-        allowToRot = false;
         super.onEnable();
     }
 
@@ -115,8 +116,6 @@ public class KillAura extends Module {
     protected void onDisable() {
         target = null;
         unblock();
-        RotationManager.customRots = false;
-        mc.timer.timerSpeed = 1f;
         super.onDisable();
     }
 
@@ -135,52 +134,13 @@ public class KillAura extends Module {
     }
 
     @Override
-    public void onRenderRotation(Events.RenderRotation event) {
-        if (allowToRot && RotationManager.customRots) {
-            event.yaw = RotationManager.serverYaw;
-            event.pitch = RotationManager.serverPitch;
-        }
-        super.onRenderRotation(event);
-    }
-
-    @Override
-    public void onLook(Events.Look event) {
+    public void onRotation(Events.Rotation event) {
         updateTarget();
-        RotationManager.customRots = target != null;
-        if (target != null) {
-            allowToRot = mc.currentScreen == null;
-            calcRotation();
-        }
-        if (allowToRot && RotationManager.customRots) {
-            event.yaw = RotationManager.serverYaw;
-            event.pitch = RotationManager.serverPitch;
-        }
-        super.onLook(event);
-    }
-
-    @Override
-    public void onJump(Events.Jump event) {
-        if (allowToRot && RotationManager.customRots) {
-            event.yaw = RotationManager.serverYaw;
-        }
-        super.onJump(event);
-    }
-
-    @Override
-    public void onMotion(Events.Motion event) {
-        if (allowToRot && RotationManager.customRots) {
-            event.yaw = RotationManager.serverYaw;
-            event.pitch = RotationManager.serverPitch;
-        }
-        super.onMotion(event);
-    }
-
-    @Override
-    public void onMoveFlying(Events.MoveFlying event) {
-        if (allowToRot && RotationManager.customRots) {
-            event.yaw = RotationManager.serverYaw;
-        }
-        super.onMoveFlying(event);
+        if (target == null) return;
+        float[] rot = calcRotation();
+        event.yaw = rot[0];
+        event.pitch = rot[1];
+        super.onRotation(event);
     }
 
     @Override
@@ -193,42 +153,44 @@ public class KillAura extends Module {
     private float aYaw, aPitch;
     private long next;
 
-    private void calcRotation() {
+    private float[] calcRotation() {
         Vec3 eye = mc.thePlayer.getPositionEyes(1f);
         AxisAlignedBB bb = target.getEntityBoundingBox();
         Vec3 nearest = AlgebraUtil.nearest(bb, eye);
-        if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { RotationManager.serverYaw, RotationManager.serverPitch }) == target) {
+        if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch }) == target) {
 //        if (bb.intersects(eye, eye.add(mc.player.getRotationVec(1f).multiply(6)))) {
             if (System.currentTimeMillis() > next) {
                 final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, -0.3, 0), eye);
                 next = System.currentTimeMillis() + RandomUtil.nextInt(50);
                 aYaw = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
-                        center[0] - RotationManager.serverYaw
+                        center[0] - mc.thePlayer.rotationYaw
                 );
                 aPitch = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
-                        center[1] - RotationManager.serverPitch
+                        center[1] - mc.thePlayer.rotationPitch
                 );
             }
-            float[] r = { RotationManager.serverYaw + aYaw * RandomUtil.nextFloat(1),
-                    RotationManager.serverPitch + aPitch * RandomUtil.nextFloat(1) };
-            r = RotationUtil.getFixedRotation(r, new float[] { RotationManager.serverYaw, RotationManager.serverPitch });
-            RotationManager.serverYaw = r[0];
-            RotationManager.serverPitch = r[1];
-            return;
+            float[] r = { mc.thePlayer.rotationYaw + aYaw * RandomUtil.nextFloat(1),
+                    mc.thePlayer.rotationPitch + aPitch * RandomUtil.nextFloat(1) };
+            r = RotationUtil.getFixedRotation(r, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
+            return r;
         }
         float[] z = RotationUtil.rotation(nearest.addVector(
                 RandomUtil.nextDouble(-0.1f, 0.1),
                 RandomUtil.nextDouble(-0.1f, 0.1),
                 RandomUtil.nextDouble(-0.1f, 0.1)
         ), eye);
-        z[0] = RotationUtil.smoothRot(RotationManager.serverYaw, z[0], RandomUtil.nextFloat(25f, 30));
-        z[1] = RotationUtil.smoothRot(RotationManager.serverPitch, z[1], RandomUtil.nextFloat(25f, 30));
-        z[1] += (float) (Math.sin(MathHelper.wrapAngleTo180_double(RotationManager.serverYaw - z[0]) / 5) * 5);
-        z = RotationUtil.getFixedRotation(z, new float[] { RotationManager.serverYaw, RotationManager.serverPitch });
+        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 5);
+        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 5);
+        // 速くエイムしようとすればするほど、正しくエイムできなくなるやつ
+        {
+            float diff = MathHelper.wrapAngleTo180_float(z[0] - mc.thePlayer.rotationYaw);
+            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
+        }
+        z[1] += (float) (Math.sin(MathHelper.wrapAngleTo180_double(mc.thePlayer.rotationYaw - z[0]) / 5) * 5);
+        z = RotationUtil.getFixedRotation(z, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
 //        mc.thePlayer.rotationYaw = rots[0];
 //        mc.thePlayer.rotationPitch = rots[1];
-        RotationManager.serverYaw = z[0];
-        RotationManager.serverPitch = z[1];
+        return z;
     }
 
     private void unblock() {}

@@ -1,18 +1,8 @@
 package net.minecraft.client.renderer.entity;
 
-import java.awt.Color;
+import com.google.common.collect.Lists;
 import java.nio.FloatBuffer;
 import java.util.List;
-
-import githave.GitHave;
-import githave.event.Events;
-import githave.manager.rotation.RotationManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL11;
-
-import com.google.common.collect.Lists;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -38,6 +28,9 @@ import net.optifine.EmissiveTextures;
 import net.optifine.entity.model.CustomEntityModels;
 import net.optifine.reflect.Reflector;
 import net.optifine.shaders.Shaders;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL11;
 
 public abstract class RendererLivingEntity<T extends EntityLivingBase> extends Render<T>
 {
@@ -84,6 +77,11 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         return this.mainModel;
     }
 
+    /**
+     * Returns a rotation angle that is inbetween two other rotation angles. par1 and par2 are the angles between which
+     * to interpolate, par3 is probably a float between 0.0 and 1.0 that tells us where "between" the two angles we are.
+     * Example: par1 = 30, par2 = 50, par3 = 0.5, then return = 40
+     */
     protected float interpolateRotation(float par1, float par2, float par3)
     {
         float f;
@@ -104,38 +102,12 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
     public void transformHeldFull3DItemLayer()
     {
     }
-    protected void updateDistance()
-    {
-        float f = MathHelper.wrapAngleTo180_float(RotationManager.serverYaw - Minecraft.getMinecraft().thePlayer.renderYawOffset);
-        Minecraft.getMinecraft().thePlayer.renderYawOffset += f * 0.3F;
-        float f1 = MathHelper.wrapAngleTo180_float(RotationManager.serverYaw - Minecraft.getMinecraft().thePlayer.renderYawOffset);
-        boolean flag = f1 < -90.0F || f1 >= 90.0F;
 
-        if (f1 < -75.0F)
-        {
-            f1 = -75.0F;
-        }
-
-        if (f1 >= 75.0F)
-        {
-            f1 = 75.0F;
-        }
-
-        Minecraft.getMinecraft().thePlayer.renderYawOffset = RotationManager.serverYaw - f1;
-
-        if (f1 * f1 > 2500.0F)
-        {
-            Minecraft.getMinecraft().thePlayer.renderYawOffset += f1 * 0.2F;
-        }
-
-
-    }
-
+    /**
+     * Renders the desired {@code T} type Entity.
+     */
     public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
-        Events.EntityRenderer eventRenderEntity = new Events.EntityRenderer(true, entity);
-        GitHave.INSTANCE.eventManager.call(eventRenderEntity);
-
         if (!Reflector.RenderLivingEvent_Pre_Constructor.exists() || !Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Pre_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)}))
         {
             if (animateModelLiving)
@@ -157,64 +129,7 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
 
             try
             {
-                Events.RenderRotation event = new Events.RenderRotation(entity.rotationYaw, entity.rotationPitch);
-                GitHave.INSTANCE.eventManager.call(event);
-                float yaw = 0f;
-                float pitch = 0f;
-
-                if (entity == Minecraft.getMinecraft().thePlayer)
-                {
-                    if (RotationManager.customRots)
-                    {
-                        pitch = event.pitch;
-                    }
-                    else
-                    {
-                        pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
-                    }
-                }
-                else
-                {
-                    pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
-                }
-
-                if (entity == Minecraft.getMinecraft().thePlayer)
-                {
-                    if (RotationManager.customRots)
-                    {
-                        float f = MathHelper.wrapAngleTo180_float(event.yaw - Minecraft.getMinecraft().thePlayer.renderYawOffset);
-                        Minecraft.getMinecraft().thePlayer.renderYawOffset += f * 0.3F;
-                        float f1 = MathHelper.wrapAngleTo180_float(event.yaw - Minecraft.getMinecraft().thePlayer.prevRenderYawOffset);
-                        boolean flag = f1 < -90.0F || f1 >= 90.0F;
-
-                        if (f1 < -75.0F)
-                        {
-                            f1 = -75.0F;
-                        }
-
-                        if (f1 >= 75.0F)
-                        {
-                            f1 = 75.0F;
-                        }
-
-
-
-                        //Minecraft.getMinecraft().thePlayer.renderYawOffset = event.getYaw() - f1;
-                        yaw = event.yaw - f1;
-
-                        Minecraft.getMinecraft().thePlayer.rotationYawHead = event.yaw;
-                    }
-                    else
-                    {
-                        yaw = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
-                    }
-                }
-                else
-                {
-                    yaw = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
-                }
-
-                float f = yaw;
+                float f = this.interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
                 float f1 = this.interpolateRotation(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
                 float f2 = f1 - f;
 
@@ -245,11 +160,9 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                     f2 = f1 - f;
                 }
 
-                float f7 = pitch;
+                float f7 = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
                 this.renderLivingAt(entity, x, y, z);
                 float f8 = this.handleRotationFloat(entity, partialTicks);
-
-
                 this.rotateCorpse(entity, f8, f, partialTicks);
                 GlStateManager.enableRescaleNormal();
                 GlStateManager.scale(-1.0F, -1.0F, 1.0F);
@@ -268,7 +181,6 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 {
                     f5 = 1.0F;
                 }
-
 
                 GlStateManager.enableAlpha();
                 this.mainModel.setLivingAnimations(entity, f6, f5, partialTicks);
@@ -298,7 +210,6 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 }
                 else
                 {
-
                     boolean flag = this.setDoRenderBrightness(entity, partialTicks);
 
                     if (EmissiveTextures.isActive())
@@ -311,14 +222,12 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                         GlStateManager.pushMatrix();
                     }
 
-
                     this.renderModel(entity, f6, f5, f8, f2, f7, 0.0625F);
 
                     if (this.renderModelPushMatrix)
                     {
                         GlStateManager.popMatrix();
                     }
-
 
                     if (EmissiveTextures.isActive())
                     {
@@ -335,38 +244,14 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                         EmissiveTextures.endRender();
                     }
 
-
-
-
                     if (flag)
                     {
                         this.unsetBrightness();
                     }
 
-                    // TODO: Chams
-//                    if(Client.INSTANCE.getModuleManager().getModule(ChamsModule.class).isEnabled() && entity != Minecraft.getMinecraft().thePlayer && entity instanceof EntityPlayer) {
-//                        GL11.glPushMatrix();
-//                        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-//                        GL11.glDisable(GL11.GL_DEPTH_TEST);
-//                        GL11.glDisable(GL11.GL_TEXTURE_2D);
-//                        GL11.glEnable(GL11.GL_BLEND);
-//                        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-//                        GL11.glDisable(GL11.GL_CULL_FACE);
-//                        RenderUtils.color(ColorUtils.getColor(((ChamsModule)Client.INSTANCE.getModuleManager().getModule(ChamsModule.class)).color, System.nanoTime()/1000000F, 0, 5));
-//                        GL11.glRotatef(f5,0,0.001f,0);
-//                        this.renderModel(entity, f6, f5, f8, f2, f7, 0.0625F);
-//                        GL11.glEnable(GL11.GL_CULL_FACE);
-//                        GL11.glDisable(GL11.GL_BLEND);
-//                        GL11.glEnable(GL11.GL_TEXTURE_2D);
-//                        GL11.glEnable(GL11.GL_DEPTH_TEST);
-//                        GL11.glColor3d(1, 1, 1);
-//                        GL11.glPopAttrib();
-//                        GL11.glPopMatrix();
-//                    }
-
                     GlStateManager.depthMask(true);
 
-                    if ((!(entity instanceof EntityPlayer) || !((EntityPlayer)entity).isSpectator()))
+                    if (!(entity instanceof EntityPlayer) || !((EntityPlayer)entity).isSpectator())
                     {
                         this.renderLayers(entity, f6, f5, partialTicks, f8, f2, f7, 0.0625F);
                     }
@@ -400,8 +285,6 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
                 Reflector.postForgeBusEvent(Reflector.RenderLivingEvent_Post_Constructor, new Object[] {entity, this, Double.valueOf(x), Double.valueOf(y), Double.valueOf(z)});
             }
         }
-        Events.EntityRenderer wa = new Events.EntityRenderer(false, entity);
-        GitHave.INSTANCE.eventManager.call(wa);
     }
 
     protected boolean setScoreTeamColor(T entityLivingBaseIn)
@@ -423,7 +306,6 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
             }
         }
 
-
         float f1 = (float)(i >> 16 & 255) / 255.0F;
         float f2 = (float)(i >> 8 & 255) / 255.0F;
         float f = (float)(i & 255) / 255.0F;
@@ -434,7 +316,6 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
         GlStateManager.disableTexture2D();
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-
         return true;
     }
 
@@ -443,12 +324,14 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         GlStateManager.enableLighting();
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
         GlStateManager.enableTexture2D();
-
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
         GlStateManager.enableTexture2D();
         GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
     }
 
+    /**
+     * Renders the model in RenderLiving
+     */
     protected void renderModel(T entitylivingbaseIn, float p_77036_2_, float p_77036_3_, float p_77036_4_, float p_77036_5_, float p_77036_6_, float scaleFactor)
     {
         boolean flag = !entitylivingbaseIn.isInvisible();
@@ -625,6 +508,9 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         }
     }
 
+    /**
+     * Sets a simple glTranslate on a LivingEntity.
+     */
     protected void renderLivingAt(T entityLivingBaseIn, double x, double y, double z)
     {
         GlStateManager.translate((float)x, (float)y, (float)z);
@@ -658,11 +544,17 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         }
     }
 
+    /**
+     * Returns where in the swing animation the living entity is (from 0 to 1).  Args : entity, partialTickTime
+     */
     protected float getSwingProgress(T livingBase, float partialTickTime)
     {
         return livingBase.getSwingProgress(partialTickTime);
     }
 
+    /**
+     * Defines what float the third param in setRotationAngles of ModelBase is
+     */
     protected float handleRotationFloat(T livingBase, float partialTicks)
     {
         return (float)livingBase.ticksExisted + partialTicks;
@@ -718,11 +610,18 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         return 90.0F;
     }
 
+    /**
+     * Returns an ARGB int color back. Args: entityLiving, lightBrightness, partialTickTime
+     */
     protected int getColorMultiplier(T entitylivingbaseIn, float lightBrightness, float partialTickTime)
     {
         return 0;
     }
 
+    /**
+     * Allows the render to do any OpenGL state modifications necessary before the model is rendered. Args:
+     * entityLiving, partialTickTime
+     */
     protected void preRenderCallback(T entitylivingbaseIn, float partialTickTime)
     {
     }
@@ -844,108 +743,5 @@ public abstract class RendererLivingEntity<T extends EntityLivingBase> extends R
         }
 
         textureBrightness.updateDynamicTexture();
-    }
-    private static FloatBuffer shaderBrightnessBuffer = GLAllocation.createDirectFloatBuffer(4);
-    private static final DynamicTexture field_177096_e = new DynamicTexture(16, 16);
-    public static boolean setShaderBrightness(Color color) {
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GlStateManager.enableTexture2D();
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, OpenGlHelper.defaultTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.GL_PRIMARY_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_REPLACE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, OpenGlHelper.defaultTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GlStateManager.enableTexture2D();
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, OpenGlHelper.GL_INTERPOLATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, OpenGlHelper.GL_CONSTANT);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE2_RGB, OpenGlHelper.GL_CONSTANT);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND2_RGB, GL11.GL_SRC_ALPHA);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_REPLACE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        shaderBrightnessBuffer.position(0);
-
-        float r = color.getRed() / 255.0F;
-        float g = color.getGreen() / 255.0F;
-        float b = color.getBlue() / 255.0F;
-
-        shaderBrightnessBuffer.put(r);
-        shaderBrightnessBuffer.put(g);
-        shaderBrightnessBuffer.put(b);
-        shaderBrightnessBuffer.put(1);
-
-        if (Config.isShaders()) {
-            Shaders.setEntityColor(r, g, b, 1);
-        }
-
-        shaderBrightnessBuffer.flip();
-        GL11.glTexEnv(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_COLOR, shaderBrightnessBuffer);
-        GlStateManager.setActiveTexture(OpenGlHelper.GL_TEXTURE2);
-        GlStateManager.enableTexture2D();
-        GlStateManager.bindTexture(field_177096_e.getGlTextureId());
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.lightmapTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_REPLACE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        return true;
-
-    }
-    public static void unsetShaderBrightness() {
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-        GlStateManager.enableTexture2D();
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, OpenGlHelper.defaultTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.GL_PRIMARY_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, OpenGlHelper.defaultTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_ALPHA, OpenGlHelper.GL_PRIMARY_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_ALPHA, GL11.GL_SRC_ALPHA);
-        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, GL11.GL_TEXTURE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, GL11.GL_TEXTURE);
-        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        GlStateManager.setActiveTexture(OpenGlHelper.GL_TEXTURE2);
-        GlStateManager.disableTexture2D();
-        GlStateManager.bindTexture(0);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, GL11.GL_TEXTURE_ENV_MODE, OpenGlHelper.GL_COMBINE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_RGB, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND1_RGB, GL11.GL_SRC_COLOR);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_RGB, GL11.GL_TEXTURE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE1_RGB, OpenGlHelper.GL_PREVIOUS);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_COMBINE_ALPHA, GL11.GL_MODULATE);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_OPERAND0_ALPHA, GL11.GL_SRC_ALPHA);
-        GL11.glTexEnvi(GL11.GL_TEXTURE_ENV, OpenGlHelper.GL_SOURCE0_ALPHA, GL11.GL_TEXTURE);
-        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit);
-
-        if (Config.isShaders()) {
-            Shaders.setEntityColor(0.0F, 0.0F, 0.0F, 0.0F);
-        }
     }
 }
