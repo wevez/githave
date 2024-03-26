@@ -1,6 +1,7 @@
 package githave.module;
 
 import githave.module.impl.combat.KillAura;
+import githave.module.impl.player.AutoSprint;
 import githave.module.impl.render.HUD;
 import githave.module.impl.render.ModuleList;
 import githave.module.impl.render.TargetHUD;
@@ -14,7 +15,8 @@ public class ModuleManager {
             new KillAura(),
             new TargetHUD(),
             new ModuleList(),
-            new HUD()
+            new HUD(),
+            new AutoSprint()
     );
 
     public void init() {

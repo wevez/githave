@@ -1,6 +1,7 @@
 package githave.util;
 
 import githave.MCHook;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
 public class RotationUtil implements MCHook {
@@ -44,5 +45,13 @@ public class RotationUtil implements MCHook {
 
     public static float[] rotation(double x, double y, double z) {
         return rotation(x, y, z, mc.thePlayer.posX, mc.thePlayer.posY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
+    }
+
+    public static float smoothRot(float current, float intended, float factor) {
+        return current + MathHelper.clamp_float(
+                MathHelper.wrapAngleTo180_float(intended - current),
+                -factor,
+                factor
+        );
     }
 }
