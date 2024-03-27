@@ -44,10 +44,12 @@ public class Backtrack extends Module {
     private final DoubleSetting range = new DoubleSetting.Builder("Range", 3, 0, 8, 0.1)
             .build();
 
-    private final DoubleSetting delay = new DoubleSetting.Builder("Delay", 150, 0, 1000, 10)
+    private final DoubleSetting delay = new DoubleSetting.Builder("Delay", 300, 0, 1000, 10)
+            .setOnUpdate(v -> suffix = v + "ms")
             .build();
 
     private final BooleanSetting smart = new BooleanSetting.Builder("Smart")
+            .value(true)
             .build();
 
     private final ModeSetting espMode = new ModeSetting.Builder("ESP", "None", "Real")
@@ -57,7 +59,8 @@ public class Backtrack extends Module {
         super("Backtrack", "Allows you to attack old positions", ModuleCategory.Combat);
         this.getSettingList().addAll(Arrays.asList(
                 range,
-                delay
+                delay,
+                smart
         ));
     }
 

@@ -31,6 +31,7 @@ public class KillAura extends Module {
     private Comparator<EntityLivingBase> currentComparator = Comparator.comparingDouble(e -> mc.thePlayer.getNearestDistanceToEntity(e));
 
     private final ModeSetting targetMode = new ModeSetting.Builder("Target Mode", "Single", "Switch")
+            .onUpdate(v -> suffix = v)
             .build();
 
     private final MultiBooleanSetting targets = new MultiBooleanSetting.Builder("Targets", "Animals", "Monsters", "Villagers", "Players")
@@ -179,12 +180,11 @@ public class KillAura extends Module {
                 RandomUtil.nextDouble(-0.1f, 0.1),
                 RandomUtil.nextDouble(-0.1f, 0.1)
         ), eye);
-        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 5);
-        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 5);
-        // 速くエイムしようとすればするほど、正しくエイムできなくなるやつ
+        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 4);
+        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 4);
         {
             float diff = MathHelper.wrapAngleTo180_float(z[0] - mc.thePlayer.rotationYaw);
-            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
+//            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
         }
         z[1] += (float) (Math.sin(MathHelper.wrapAngleTo180_double(mc.thePlayer.rotationYaw - z[0]) / 5) * 5);
         z = RotationUtil.getFixedRotation(z, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });

@@ -26,6 +26,12 @@ public class Module implements EventListener, MCHook {
 
     private int keyCode;
 
+    protected String suffix = "";
+
+    public final String getSuffix() {
+        return suffix;
+    }
+
     public Module(String name, String description, ModuleCategory category) {
         this.name = name;
         this.description = description;

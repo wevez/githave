@@ -50,8 +50,20 @@ public class ModuleList extends Module {
             x.uodate(m.isToggled() ? 0.1 : -0.1);
             double percent = x.calcPercent();
             if (percent == 0) continue;
-            double fontWidth = font.width(m.getName());
             double height = percent * 16;
+//            if (m.getSuffix().isEmpty()) {
+//                double fontWidth = font.width(m.getName());
+//                rect(sr.getScaledWidth() - (6 + fontWidth) * percent, offset, fontWidth + 4, height, 0xff190640);
+//                rect(sr.getScaledWidth() - 2, offset, 2, height, 0xff937CE1);
+//                font.drawString(m.getName(), sr.getScaledWidth() - (4 + fontWidth) * percent, offset + 4, 0xff937CE1);
+//            } else {
+//                double fontWidth = font.width(m.getName() + m.getSuffix());
+//                rect(sr.getScaledWidth() - (8 + fontWidth) * percent, offset, fontWidth + 8, height, 0xff190640);
+//                rect(sr.getScaledWidth() - 2, offset, 2, height, 0xff937CE1);
+//                font.drawString(m.getName(), sr.getScaledWidth() - (6 + fontWidth) * percent, offset + 4, 0xff937CE1);
+//                font.drawString(m.getSuffix(), sr.getScaledWidth() - (4 + fontWidth - font.width(m.getSuffix())) * percent, offset + 4, 0xffFFF6FF);
+//            }
+            double fontWidth = font.width(m.getName());
             rect(sr.getScaledWidth() - (6 + fontWidth) * percent, offset, fontWidth + 4, height, 0xff190640);
             rect(sr.getScaledWidth() - 2, offset, 2, height, 0xff937CE1);
             font.drawString(m.getName(), sr.getScaledWidth() - (4 + fontWidth) * percent, offset + 4, 0xff937CE1);
