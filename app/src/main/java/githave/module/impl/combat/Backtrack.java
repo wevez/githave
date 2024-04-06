@@ -64,10 +64,23 @@ public class Backtrack extends Module {
         ));
     }
 
+    private static boolean staticToggled;
+
+    public static boolean isStaticToggled() {
+        return staticToggled;
+    }
+
     @Override
     protected void onEnable() {
+        staticToggled = true;
         packets.clear();
         super.onEnable();
+    }
+
+    @Override
+    protected void onDisable() {
+        staticToggled = false;
+        super.onDisable();
     }
 
     @Override

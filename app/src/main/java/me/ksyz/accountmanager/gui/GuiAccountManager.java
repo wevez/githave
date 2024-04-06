@@ -1,16 +1,17 @@
 package me.ksyz.accountmanager.gui;
 
+import githave.util.RandomUtil;
 import me.ksyz.accountmanager.AccountManager;
 import me.ksyz.accountmanager.auth.Account;
 import me.ksyz.accountmanager.auth.MicrosoftAuth;
 import me.ksyz.accountmanager.auth.SessionManager;
 import me.ksyz.accountmanager.utils.Notification;
-import me.ksyz.accountmanager.utils.TextFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
+import net.minecraft.util.Session;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 
@@ -52,8 +53,11 @@ public class GuiAccountManager extends GuiScreen {
     Keyboard.enableRepeatEvents(true);
 
     buttonList.clear();
+    buttonList.add(new GuiButton(
+            114514, width / 2 - 150 - 4, height - 52, 150, 20, "Random Cracked"
+    ));
     buttonList.add(loginButton = new GuiButton(
-      0, width / 2 - 150 - 4, height - 52, 150, 20, "Login"
+      0, width / 2 - 150 - 4, height - 52 - 20, 150, 20, "Login"
     ));
     buttonList.add(new GuiButton(
       1, width / 2 + 4, height - 52, 150, 20, "Add"
@@ -100,13 +104,13 @@ public class GuiAccountManager extends GuiScreen {
 
     drawCenteredString(
       fontRendererObj,
-      TextFormatting.translate(String.format(
+      (String.format(
         "&rAccount Manager &8(&7%s&8)&r", AccountManager.size()
       )),
       width / 2, 20, -1
     );
 
-    String text = TextFormatting.translate(String.format(
+    String text = (String.format(
       "&7Username: &3%s&r", SessionManager.getSession().getUsername()
     ));
     mc.currentScreen.drawString(mc.fontRendererObj, text, 3, 3, -1);
@@ -183,6 +187,10 @@ public class GuiAccountManager extends GuiScreen {
 
     if (button.enabled) {
       switch (button.id) {
+        case 114514: {
+          mc.session = new Session(RandomUtil.nextString(8), RandomUtil.nextString(8), "", "");
+          break;
+        }
         case 0: { // Login
           if (task == null || task.isDone()) {
             if (executor == null) {
@@ -192,8 +200,8 @@ public class GuiAccountManager extends GuiScreen {
             String username = StringUtils.isBlank(account.getUsername()) ? "???" : account.getUsername();
             AtomicReference<String> refreshToken = new AtomicReference<>("");
             AtomicReference<String> accessToken = new AtomicReference<>("");
-            notification = new Notification(TextFormatting.translate(String.format(
-              "&7Fetching your Minecraft profile... (%s)&r", username
+            notification = new Notification((String.format(
+              "Fetching your Minecraft profile... (%s)", username
             )), -1L);
             task = MicrosoftAuth.login(account.getAccessToken(), executor)
               .handle((session, error) -> {
@@ -201,8 +209,8 @@ public class GuiAccountManager extends GuiScreen {
                   account.setUsername(session.getUsername());
                   AccountManager.save();
                   SessionManager.setSession(session);
-                  notification = new Notification(TextFormatting.translate(String.format(
-                    "&aSuccessful login! (%s)&r", account.getUsername()
+                  notification = new Notification((String.format(
+                    "Successful login! (%s)", account.getUsername()
                   )), 5000L);
                   return true;
                 }
@@ -212,35 +220,35 @@ public class GuiAccountManager extends GuiScreen {
                 if (completed) {
                   throw new NoSuchElementException();
                 }
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&7Refreshing Microsoft access tokens... (%s)&r", username
+                notification = new Notification((String.format(
+                  "Refreshing Microsoft access tokens... (%s)", username
                 )), -1L);
                 return MicrosoftAuth.refreshMSAccessTokens(account.getRefreshToken(), executor);
               })
               .thenComposeAsync(msAccessTokens -> {
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&7Acquiring Xbox access token... (%s)&r", username
+                notification = new Notification((String.format(
+                  "Acquiring Xbox access token... (%s)", username
                 )), -1L);
                 refreshToken.set(msAccessTokens.get("refresh_token"));
                 return MicrosoftAuth.acquireXboxAccessToken(msAccessTokens.get("access_token"), executor);
               })
               .thenComposeAsync(xboxAccessToken -> {
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&7Acquiring Xbox XSTS token... (%s)&r", username
+                notification = new Notification((String.format(
+                  "Acquiring Xbox XSTS token... (%s)", username
                 )), -1L);
                 return MicrosoftAuth.acquireXboxXstsToken(xboxAccessToken, executor);
               })
               .thenComposeAsync(xboxXstsData -> {
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&7Acquiring Minecraft access token... (%s)&r", username
+                notification = new Notification((String.format(
+                  "Acquiring Minecraft access token... (%s)", username
                 )), -1L);
                 return MicrosoftAuth.acquireMCAccessToken(
                   xboxXstsData.get("Token"), xboxXstsData.get("uhs"), executor
                 );
               })
               .thenComposeAsync(mcToken -> {
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&7Fetching your Minecraft profile... (%s)&r", username
+                notification = new Notification((String.format(
+                  "Fetching your Minecraft profile... (%s)", username
                 )), -1L);
                 accessToken.set(mcToken);
                 return MicrosoftAuth.login(mcToken, executor);
@@ -252,14 +260,14 @@ public class GuiAccountManager extends GuiScreen {
                 account.setTimestamp(System.currentTimeMillis());
                 AccountManager.save();
                 SessionManager.setSession(session);
-                notification = new Notification(TextFormatting.translate(String.format(
-                  "&aSuccessful login! (%s)&r", account.getUsername()
+                notification = new Notification((String.format(
+                  "Successful login! (%s)", account.getUsername()
                 )), 5000L);
               })
               .exceptionally(error -> {
                 if (!(error.getCause() instanceof NoSuchElementException)) {
-                  notification = new Notification(TextFormatting.translate(String.format(
-                    "&c%s (%s)&r", error.getMessage(), username
+                  notification = new Notification((String.format(
+                    "%s (%s)", error.getMessage(), username
                   )), 5000L);
                 }
                 return null;
@@ -330,7 +338,7 @@ public class GuiAccountManager extends GuiScreen {
       Account account = AccountManager.get(entryID);
 
       String username = StringUtils.isBlank(account.getUsername()) ? "???" : account.getUsername();
-      String text = TextFormatting.translate(String.format(
+      String text = (String.format(
         "%s%s&r",
         SessionManager.getSession().getUsername().equals(username) ? "&a&l" : "&f",
         username
@@ -340,7 +348,7 @@ public class GuiAccountManager extends GuiScreen {
         x + 2, y + 2, -1
       );
 
-      String time = TextFormatting.translate(String.format(
+      String time = (String.format(
         "&8&o%s&r", sdf.format(new Date(account.getTimestamp()))
       ));
       GuiAccountManager.this.drawString(

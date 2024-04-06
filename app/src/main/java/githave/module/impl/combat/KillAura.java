@@ -1,7 +1,6 @@
 package githave.module.impl.combat;
 
 import githave.event.Events;
-import githave.manager.rotation.RotationManager;
 import githave.util.*;
 import githave.util.bypass.IndependentCPS;
 import net.minecraft.entity.EntityLivingBase;
@@ -25,6 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class KillAura extends Module {
+
+    public static boolean shouldClick;
 
     public static EntityLivingBase target;;
 
@@ -128,7 +129,11 @@ public class KillAura extends Module {
     @Override
     public void onTick(Events.Tick event) {
         if (target == null) return;
-        if (cpsTimer.onTick()) {
+        if (shouldClick || cpsTimer.onTick()) {
+            if (shouldClick) {
+                System.out.println("Tickbase attack");
+            }
+            shouldClick = false;
             mc.clickMouse();
         }
         super.onTick(event);
@@ -161,7 +166,7 @@ public class KillAura extends Module {
         if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch }) == target) {
 //        if (bb.intersects(eye, eye.add(mc.player.getRotationVec(1f).multiply(6)))) {
             if (System.currentTimeMillis() > next) {
-                final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, -0.3, 0), eye);
+                final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, 0, 0), eye);
                 next = System.currentTimeMillis() + RandomUtil.nextInt(50);
                 aYaw = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
                         center[0] - mc.thePlayer.rotationYaw
@@ -180,8 +185,8 @@ public class KillAura extends Module {
                 RandomUtil.nextDouble(-0.1f, 0.1),
                 RandomUtil.nextDouble(-0.1f, 0.1)
         ), eye);
-        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 4);
-        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 4);
+        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 2);
+        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 2);
         {
             float diff = MathHelper.wrapAngleTo180_float(z[0] - mc.thePlayer.rotationYaw);
 //            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
