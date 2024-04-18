@@ -1809,6 +1809,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
         }
 
         GitHave.INSTANCE.eventManager.call(render3DEvent);
+        GL11.glColor4d(1.0, 1.0, 1.0, 1.0);
 
         this.mc.mcProfiler.endStartSection("hand");
 

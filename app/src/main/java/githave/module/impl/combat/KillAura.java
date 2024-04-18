@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 
 public class KillAura extends Module {
 
-    public static EntityLivingBase target;;
+    public static EntityLivingBase target;
+    public static boolean blocking;
 
     private Comparator<EntityLivingBase> currentComparator = Comparator.comparingDouble(e -> mc.thePlayer.getNearestDistanceToEntity(e));
 
@@ -136,7 +137,11 @@ public class KillAura extends Module {
     @Override
     public void onRotation(Events.Rotation event) {
         updateTarget();
-        if (target == null) return;
+        if (target == null) {
+            unblock();
+            return;
+        }
+        block();
         float[] rot = calcRotation();
         event.yaw = rot[0];
         event.pitch = rot[1];
@@ -196,9 +201,13 @@ public class KillAura extends Module {
         return z;
     }
 
-    private void unblock() {}
+    private void unblock() {
+        blocking = false;
+    }
 
-    private void block() {}
+    private void block() {
+        blocking = true;
+    }
 
     private void updateTarget() {
          List<EntityLivingBase> entry = mc.theWorld.loadedEntityList.stream()
