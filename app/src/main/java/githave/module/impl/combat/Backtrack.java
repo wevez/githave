@@ -49,7 +49,7 @@ public class Backtrack extends Module {
             .build();
 
     private final BooleanSetting smart = new BooleanSetting.Builder("Smart")
-            .value(true)
+            .value(false)
             .build();
 
     private final ModeSetting espMode = new ModeSetting.Builder("ESP", "None", "Real")
@@ -59,8 +59,7 @@ public class Backtrack extends Module {
         super("Backtrack", "Allows you to attack old positions", ModuleCategory.Combat);
         this.getSettingList().addAll(Arrays.asList(
                 range,
-                delay,
-                smart
+                delay
         ));
     }
 
@@ -183,6 +182,20 @@ public class Backtrack extends Module {
 
     @Override
     public void onRender3D(Events.Render3D event) {
+        for (Entity e : mc.theWorld.loadedEntityList) {
+            if (e instanceof EntityLivingBase) {
+                ColorUtil.glColor(0xa0ff0000);
+                double x = e.posX, y = e.posY, z = e.posZ;
+                Render3DUtil.drawBoundingBox(
+                        x - e.width / 2,
+                        y,
+                        z - e.width / 2,
+                        x + e.width / 2,
+                        y + e.height,
+                        z + e.width / 2
+                );
+            }
+        }
         if (entity != null && entity.getEntityBoundingBox() != null && mc.thePlayer != null && mc.theWorld != null
                 && entity.realPosX != 0 && entity.realPosY != 0 && entity.realPosZ != 0 && entity.width != 0
                 && entity.height != 0) {

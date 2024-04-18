@@ -5,6 +5,7 @@ import me.ksyz.accountmanager.auth.Account;
 import me.ksyz.accountmanager.auth.MicrosoftAuth;
 import me.ksyz.accountmanager.auth.SessionManager;
 import me.ksyz.accountmanager.utils.Notification;
+import me.ksyz.accountmanager.utils.TextFormatting;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -75,9 +76,9 @@ public class GuiMicrosoftAuth extends GuiScreen {
           AccountManager.save();
           SessionManager.setSession(session);
           mc.displayGuiScreen(new GuiAccountManager(previousScreen,
-            new Notification(String.format(
-                    "&aSuccessful login! (%s)&r", session.getUsername()
-            ), 5000L)));
+            new Notification(TextFormatting.translate(String.format(
+              "&aSuccessful login! (%s)&r", session.getUsername()
+            )), 5000L)));
         })
         .exceptionally(error -> {
           status = String.format("&c%s&r", error.getMessage());
@@ -107,20 +108,20 @@ public class GuiMicrosoftAuth extends GuiScreen {
 
     if (status != null) {
       drawCenteredString(
-        fontRendererObj, status,
+        fontRendererObj, TextFormatting.translate(status),
         width / 2, height / 2 - fontRendererObj.FONT_HEIGHT / 2, -1
       );
     }
 
     if (cause != null) {
-      String causeText = (cause);
+      String causeText = TextFormatting.translate(cause);
       Gui.drawRect(
         0, height - 2 - fontRendererObj.FONT_HEIGHT - 3,
         3 + mc.fontRendererObj.getStringWidth(causeText) + 3, height,
         0x64000000
       );
       drawString(
-        fontRendererObj, (cause),
+        fontRendererObj, TextFormatting.translate(cause),
         3, height - 2 - fontRendererObj.FONT_HEIGHT, -1
       );
     }

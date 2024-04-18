@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
 
 public class KillAura extends Module {
 
-    public static boolean shouldClick;
-
     public static EntityLivingBase target;;
 
     private Comparator<EntityLivingBase> currentComparator = Comparator.comparingDouble(e -> mc.thePlayer.getNearestDistanceToEntity(e));
@@ -129,11 +127,7 @@ public class KillAura extends Module {
     @Override
     public void onTick(Events.Tick event) {
         if (target == null) return;
-        if (shouldClick || cpsTimer.onTick()) {
-            if (shouldClick) {
-                System.out.println("Tickbase attack");
-            }
-            shouldClick = false;
+        if (cpsTimer.onTick()) {
             mc.clickMouse();
         }
         super.onTick(event);
@@ -165,7 +159,7 @@ public class KillAura extends Module {
         Vec3 nearest = AlgebraUtil.nearest(bb, eye);
         if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch }) == target) {
 //        if (bb.intersects(eye, eye.add(mc.player.getRotationVec(1f).multiply(6)))) {
-            if (System.currentTimeMillis() > next) {
+            if (mc.thePlayer.getNearestDistanceToEntity(target) > target.width && System.currentTimeMillis() > next) {
                 final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, 0, 0), eye);
                 next = System.currentTimeMillis() + RandomUtil.nextInt(50);
                 aYaw = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
@@ -185,8 +179,12 @@ public class KillAura extends Module {
                 RandomUtil.nextDouble(-0.1f, 0.1),
                 RandomUtil.nextDouble(-0.1f, 0.1)
         ), eye);
-        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) / 2);
-        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) / 2);
+        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) * RandomUtil.nextFloat(
+                (float) this.minYawSpeed.getValue(), (float) this.maxYawSpeed.getValue()
+        ) / 180f);
+        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) * RandomUtil.nextFloat(
+                (float) this.minYawSpeed.getValue(), (float) this.maxYawSpeed.getValue()
+        ) / 180f);
         {
             float diff = MathHelper.wrapAngleTo180_float(z[0] - mc.thePlayer.rotationYaw);
 //            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
@@ -215,7 +213,10 @@ public class KillAura extends Module {
                         if (!targets.getValue().get("Players")) return false;
                         switch (teams.getValue()) {
                             case "None": return true;
-                            case "Team Color": return !e.getTeam().isSameTeam(mc.thePlayer.getTeam());
+                            case "Team Color": {
+                                if (e.getTeam() == null) return mc.thePlayer.getTeam() != null;
+                                return !e.getTeam().isSameTeam(mc.thePlayer.getTeam());
+                            }
                         }
                     }
                     return false;

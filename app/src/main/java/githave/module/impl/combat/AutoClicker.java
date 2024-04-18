@@ -44,7 +44,7 @@ public class AutoClicker extends Module {
 
     @Override
     public void onTick(Events.Tick event) {
-        if (mc.thePlayer == null || mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK || mc.gameSettings.keyBindAttack.isKeyDown()) {
+        if (mc.thePlayer == null || mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK || !mc.gameSettings.keyBindAttack.isKeyDown()) {
             return;
         }
         if (shouldClick || cpsTimer.onTick()) {

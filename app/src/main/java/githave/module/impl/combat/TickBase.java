@@ -1,6 +1,5 @@
 package githave.module.impl.combat;
 
-import de.florianmichael.viamcp.fixes.AttackOrder;
 import githave.GitHave;
 import githave.event.Events;
 import githave.module.Module;
@@ -8,19 +7,14 @@ import githave.module.ModuleCategory;
 import githave.module.setting.impl.BooleanSetting;
 import githave.module.setting.impl.DoubleSetting;
 import githave.util.MoveUtil;
-import githave.util.RayCastUtil;
 import githave.util.TimerUtil;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.util.MovingObjectPosition;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
 public class TickBase extends Module {
 
@@ -43,7 +37,7 @@ public class TickBase extends Module {
     public DoubleSetting delay = new DoubleSetting.Builder("Delay", 200, 0, 3000, 50)
             .build();
     public BooleanSetting notInCombo = new BooleanSetting.Builder("Not In Combo")
-            .value(true)
+            .value(false)
             .build();
     public BooleanSetting onlyForward = new BooleanSetting.Builder("Only Forward")
             .value(true)
@@ -68,11 +62,6 @@ public class TickBase extends Module {
                 maxRange,
                 slowTimer,
                 delay,
-                notInCombo,
-                onlyForward,
-                preLoad,
-                blink,
-                onlyOnGround,
                 noFluid
         ));
     }
@@ -164,13 +153,17 @@ public class TickBase extends Module {
                         if (isHurtTime()) {
                             try {
                                 boolean shouldStop = false;
+                                boolean shouldStopNext = false;
                                 while (!shouldStop) {
+                                    if (shouldStopNext) {
+                                        shouldStop = true;
+                                    }
 
                                     if (isTargetCloseOrVisible() || !isHurtTime()
                                             || (!preLoad.getValue() && shouldStop())
                                             || (preLoad.getValue() ? balance >= lastBalance
                                             : balance >= smartMaxBalance + lastBalance)) {
-                                        shouldStop = true;
+                                        shouldStopNext = true;
                                         delayTimer.reset();
 
                                         release();
@@ -184,10 +177,11 @@ public class TickBase extends Module {
                                             clickTimer.reset();
                                             GitHave.INSTANCE.eventManager.call(new Events.Attack(target));
 
-                                            Entity rayTracedEntity = RayCastUtil.rayTrace(3,
-                                                    new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
-                                            if (rayTracedEntity != null) {
-                                                KillAura.shouldClick = true;
+//                                            Entity rayTracedEntity = RayCastUtil.rayTrace(3,
+//                                                    new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
+                                            if (mc.objectMouseOver != null && mc.objectMouseOver.entityHit != null) {
+                                                mc.clickMouse();
+                                                System.out.println("Tickbase force");
                                             }
                                         }
                                     }
@@ -219,11 +213,12 @@ public class TickBase extends Module {
                             clickTimer.reset();
                             GitHave.INSTANCE.eventManager.call(new Events.Attack(target));
 
-                            Entity rayTracedEntity = RayCastUtil.rayTrace(3,
-                                    new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
-                            if (rayTracedEntity != null) {
-                                KillAura.shouldClick = true;
-                            }
+//                            Entity rayTracedEntity = RayCastUtil.rayTrace(3,
+//                                    new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
+//                            if (mc.objectMouseOver != null && mc.objectMouseOver.entityHit != null) {
+//                                mc.clickMouse();
+//                                System.out.println("Tickbase force");
+//                            }
                         }
                     }
                 } else {
@@ -349,9 +344,10 @@ public class TickBase extends Module {
         double finalDistance = distance - 3;
 
         if (preLoad.getValue()) {
-            smartMaxBalance = finalDistance / (playerBPS + (targetBPS * 3));
+            // +1が動くかどうか
+            smartMaxBalance = 1 + finalDistance / (playerBPS + (targetBPS * 3));
         } else {
-            smartMaxBalance = finalDistance / (playerBPS * 2);
+            smartMaxBalance = 1 + finalDistance / (playerBPS * 2);
         }
     }
 
