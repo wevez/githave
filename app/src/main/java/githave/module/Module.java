@@ -59,11 +59,11 @@ public class Module implements EventListener, MCHook {
     public final void toggle() {
         this.toggled = !this.toggled;
         if (this.toggled) {
-            this.onEnable();
             GitHave.INSTANCE.eventManager.register(this);
+            this.onEnable();
         } else {
-            this.onDisable();
             GitHave.INSTANCE.eventManager.unregister(this);
+            this.onDisable();
         }
     }
 
