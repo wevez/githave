@@ -192,8 +192,15 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     {
         if (this.isChannelOpen())
         {
+            Events.SendPacket event = new Events.SendPacket(true, packetIn);
+            GitHave.INSTANCE.eventManager.call(event);
+            if (event.isCanceled()) return;
+
             this.flushOutboundQueue();
             this.dispatchPacket(packetIn, (GenericFutureListener <? extends Future <? super Void >> [])null);
+
+            Events.SendPacket event2 = new Events.SendPacket(false, packetIn);
+            GitHave.INSTANCE.eventManager.call(event2);
         }
         else
         {

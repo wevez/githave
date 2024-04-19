@@ -2362,7 +2362,7 @@ public abstract class Entity implements ICommandSender
     }
 
     public double getNearestDistanceToEntity(Entity entity) {
-        Vec3 nearest = AlgebraUtil.nearest(entity.boundingBox, this.getPositionEyes(1f));
+        Vec3 nearest = AlgebraUtil.nearest(entity.boundingBox, this.getPositionVector());
         return this.getDistance(nearest.xCoord, nearest.yCoord, nearest.zCoord);
     }
 

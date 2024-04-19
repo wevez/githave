@@ -54,4 +54,25 @@ public class RotationUtil implements MCHook {
                 factor
         );
     }
+
+    public static float normalize(float a) {
+        a %= 360;
+        if (a < 0) a+= 360;
+        return a;
+    }
+
+    public static boolean isIn(float a, float b, float c) {
+        a = normalize(a);
+        b = normalize(b);
+        c = normalize(c);
+        boolean r = false;
+        boolean revert =  (Math.abs(a - b) > 180);
+        if (a > b) {
+            r = a > c && b < c;
+        } else {
+            r = a < c && b > c;
+        }
+        if (revert) r = !r;
+        return r;
+    }
 }
