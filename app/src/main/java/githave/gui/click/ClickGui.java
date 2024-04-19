@@ -54,10 +54,6 @@ public class ClickGui extends GuiScreen {
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.partialTicks = partialTicks;
-    }
-
-    public void a() {
-        super.drawScreen(mouseX, mouseY, partialTicks);
         double per = animationUtil.uodate(0.05).calcPercent();
         GlStateManager.pushMatrix();
         Render2DUtil.setAlphaLimit((float) per);
@@ -66,6 +62,10 @@ public class ClickGui extends GuiScreen {
         GlStateManager.translate(-mc.displayWidth / 4, -mc.displayHeight / 4, 0);
         windows.forEach(c -> c.drawScreen(mouseX, mouseY, partialTicks));
         GlStateManager.popMatrix();
+    }
+
+    public void a() {
+//        super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override

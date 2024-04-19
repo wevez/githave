@@ -48,8 +48,8 @@ public class EntityBoat extends Entity
 
     protected void entityInit()
     {
-        this.dataWatcher.addObject(17, (0));
-        this.dataWatcher.addObject(18, (1));
+        this.dataWatcher.addObject(17, 0);
+        this.dataWatcher.addObject(18, 1);
         this.dataWatcher.addObject(19, (0.0F));
     }
 

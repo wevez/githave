@@ -18,7 +18,6 @@ public class ModuleManager {
             new AutoClicker(),
             new Backtrack(),
             new KillAura(),
-            new Reach(),
             new TickBase(),
             new Velocity(),
             new WTap(),

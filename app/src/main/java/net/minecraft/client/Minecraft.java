@@ -39,6 +39,9 @@ import javax.imageio.ImageIO;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import de.florianmichael.vialoadingbase.ViaLoadingBase;
 import de.florianmichael.viamcp.fixes.AttackOrder;
+import githave.GitHave;
+import githave.event.Events;
+import githave.module.Module;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.audio.MusicTicker;
@@ -68,7 +71,14 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerLoginClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.particle.EffectRenderer;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -164,9 +174,6 @@ import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraft.world.storage.ISaveFormat;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import githave.GitHave;
-import githave.event.Events;
-import githave.module.Module;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -187,6 +194,8 @@ import org.lwjgl.util.glu.GLU;
 
 public class Minecraft implements IThreadListener, IPlayerUsage
 {
+    private final Events.GameLoop gameLoop = new Events.GameLoop();
+
     private static final Logger logger = LogManager.getLogger();
     private static final ResourceLocation locationMojangPng = new ResourceLocation("textures/gui/title/mojang.png");
     public static final boolean isRunningOnMac = Util.getOSType() == Util.EnumOS.OSX;
@@ -218,14 +227,14 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     private Entity renderViewEntity;
     public Entity pointedEntity;
     public EffectRenderer effectRenderer;
-    public Session session;
+    private final Session session;
     private boolean isGamePaused;
     public FontRenderer fontRendererObj;
     public FontRenderer standardGalacticFontRenderer;
     public GuiScreen currentScreen;
     public LoadingScreenRenderer loadingScreen;
     public EntityRenderer entityRenderer;
-    public int leftClickCounter;
+    private int leftClickCounter;
     private int tempDisplayWidth;
     private int tempDisplayHeight;
     private IntegratedServer theIntegratedServer;
@@ -241,7 +250,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     private final Proxy proxy;
     private ISaveFormat saveLoader;
     private static int debugFPS;
-    public int rightClickDelayTimer;
+    private int rightClickDelayTimer;
     private String serverName;
     private int serverPort;
     public boolean inGameHasFocus;
@@ -270,18 +279,20 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     private final MinecraftSessionService sessionService;
     private SkinManager skinManager;
     private final Queue < FutureTask<? >> scheduledTasks = Queues. < FutureTask<? >> newArrayDeque();
+    private long field_175615_aJ = 0L;
     private final Thread mcThread = Thread.currentThread();
     private ModelManager modelManager;
     private BlockRendererDispatcher blockRenderDispatcher;
     volatile boolean running = true;
     public String debug = "";
+    public boolean field_175613_B = false;
+    public boolean field_175614_C = false;
+    public boolean field_175611_D = false;
     public boolean renderChunksMany = true;
     long debugUpdateTime = getSystemTime();
     int fpsCounter;
     long prevFrameTime = -1L;
     private String debugProfilerName = "root";
-
-    private final Events.GameLoop gameLoop = new Events.GameLoop();
 
     public Minecraft(GameConfiguration gameConfig)
     {
@@ -340,7 +351,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                 while (this.running)
                 {
                     GitHave.INSTANCE.eventManager.call(gameLoop);
-
                     if (!this.hasCrashed || this.crashReporter == null)
                     {
                         try
@@ -516,9 +526,12 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
 
         this.renderGlobal.makeEntityOutlineShader();
-
         GitHave.INSTANCE.init();
     }
+
+    private final Events.Tick tickEvent = new Events.Tick();
+
+    private final Events.TimeDelay timeDelay = new Events.TimeDelay();
 
     private void registerMetadataSerializers()
     {
@@ -921,10 +934,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
         }
     }
 
-    private final Events.Tick tickEvent = new Events.Tick();
-
-    private final Events.TimeDelay timeDelay = new Events.TimeDelay();
-
     private void checkGLError(String message)
     {
         if (this.enableGLErrorChecking)
@@ -943,6 +952,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
     public void shutdownMinecraftApplet()
     {
+        GitHave.INSTANCE.shutdown();
         try
         {
             this.stream.shutdownStream();
@@ -1336,7 +1346,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
     public void shutdown()
     {
-        GitHave.INSTANCE.shutdown();
         this.running = false;
     }
 
@@ -1399,98 +1408,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
             else
             {
                 this.playerController.resetBlockRemoving();
-            }
-        }
-    }
-
-    public void clickMouse()
-    {
-        if (this.leftClickCounter <= 0)
-        {
-            AttackOrder.sendConditionalSwing(this.objectMouseOver);
-
-            if (this.objectMouseOver == null)
-            {
-                logger.error("Null returned as \'hitResult\', this shouldn\'t happen!");
-
-                if (this.playerController.isNotCreative())
-                {
-                    this.leftClickCounter = 10;
-                }
-            }
-            else
-            {
-                switch (this.objectMouseOver.typeOfHit)
-                {
-                    case ENTITY:
-                        if (ViaLoadingBase.getInstance().getTargetVersion().isOlderThanOrEqualTo(ProtocolVersion.v1_8)) {
-                            this.thePlayer.swingItem();
-                            this.playerController.attackEntity(this.thePlayer, this.objectMouseOver.entityHit);
-                        } else {
-                            this.playerController.attackEntity(this.thePlayer, this.objectMouseOver.entityHit);
-                            this.thePlayer.swingItem();
-                        }
-                        break;
-
-                    case BLOCK:
-                        BlockPos blockpos = this.objectMouseOver.getBlockPos();
-
-                        if (this.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air)
-                        {
-                            this.playerController.clickBlock(blockpos, this.objectMouseOver.sideHit);
-                            break;
-                        }
-
-                    case MISS:
-                    default:
-                        if (this.playerController.isNotCreative())
-                        {
-                            this.leftClickCounter = 10;
-                        }
-                }
-            }
-        }
-    }
-
-    public void clickMouseEvent()
-    {
-        if (this.leftClickCounter <= 0)
-        {
-            AttackOrder.sendConditionalSwing(this.objectMouseOver);
-
-            if (this.objectMouseOver == null)
-            {
-                logger.error("Null returned as \'hitResult\', this shouldn\'t happen!");
-
-                if (this.playerController.isNotCreative())
-                {
-                    this.leftClickCounter = 10;
-                }
-            }
-            else
-            {
-                switch (this.objectMouseOver.typeOfHit)
-                {
-                    case ENTITY:
-                        AttackOrder.sendConditionalSwing(this.objectMouseOver);
-                        break;
-
-                    case BLOCK:
-                        BlockPos blockpos = this.objectMouseOver.getBlockPos();
-
-                        if (this.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air)
-                        {
-                            this.playerController.clickBlock(blockpos, this.objectMouseOver.sideHit);
-                            break;
-                        }
-
-                    case MISS:
-                    default:
-                        if (this.playerController.isNotCreative())
-                        {
-                            this.leftClickCounter = 10;
-                        }
-                }
             }
         }
     }
@@ -1561,6 +1478,55 @@ public class Minecraft implements IThreadListener, IPlayerUsage
                 if (itemstack1 != null && this.playerController.sendUseItem(this.thePlayer, this.theWorld, itemstack1))
                 {
                     this.entityRenderer.itemRenderer.resetEquippedProgress2();
+                }
+            }
+        }
+    }
+
+    public void clickMouse()
+    {
+        if (this.leftClickCounter <= 0)
+        {
+            AttackOrder.sendConditionalSwing(this.objectMouseOver);
+
+            if (this.objectMouseOver == null)
+            {
+                logger.error("Null returned as \'hitResult\', this shouldn\'t happen!");
+
+                if (this.playerController.isNotCreative())
+                {
+                    this.leftClickCounter = 10;
+                }
+            }
+            else
+            {
+                switch (this.objectMouseOver.typeOfHit)
+                {
+                    case ENTITY:
+                        if (ViaLoadingBase.getInstance().getTargetVersion().isOlderThanOrEqualTo(ProtocolVersion.v1_8)) {
+                            this.thePlayer.swingItem();
+                            this.playerController.attackEntity(this.thePlayer, this.objectMouseOver.entityHit);
+                        } else {
+                            this.playerController.attackEntity(this.thePlayer, this.objectMouseOver.entityHit);
+                            this.thePlayer.swingItem();
+                        }
+                        break;
+
+                    case BLOCK:
+                        BlockPos blockpos = this.objectMouseOver.getBlockPos();
+
+                        if (this.theWorld.getBlockState(blockpos).getBlock().getMaterial() != Material.air)
+                        {
+                            this.playerController.clickBlock(blockpos, this.objectMouseOver.sideHit);
+                            break;
+                        }
+
+                    case MISS:
+                    default:
+                        if (this.playerController.isNotCreative())
+                        {
+                            this.leftClickCounter = 10;
+                        }
                 }
             }
         }

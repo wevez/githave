@@ -21,6 +21,11 @@ public class Profiler
     private final Map<String, Long> profilingMap = Maps.<String, Long>newHashMap();
     public boolean profilerGlobalEnabled = true;
     private boolean profilerLocalEnabled;
+    private static final String SCHEDULED_EXECUTABLES = "scheduledExecutables";
+    private static final String TICK = "tick";
+    private static final String PRE_RENDER_ERRORS = "preRenderErrors";
+    private static final String RENDER = "render";
+    private static final String DISPLAY = "display";
     private static final int HASH_SCHEDULED_EXECUTABLES = "scheduledExecutables".hashCode();
     private static final int HASH_TICK = "tick".hashCode();
     private static final int HASH_PRE_RENDER_ERRORS = "preRenderErrors".hashCode();
@@ -58,6 +63,20 @@ public class Profiler
             else if (i == HASH_PRE_RENDER_ERRORS && name.equals("preRenderErrors"))
             {
                 Lagometer.timerTick.end();
+            }
+        }
+
+        if (Config.isFastRender())
+        {
+            int j = name.hashCode();
+
+            if (j == HASH_RENDER && name.equals("render"))
+            {
+                GlStateManager.clearEnabled = false;
+            }
+            else if (j == HASH_DISPLAY && name.equals("display"))
+            {
+                GlStateManager.clearEnabled = true;
             }
         }
 

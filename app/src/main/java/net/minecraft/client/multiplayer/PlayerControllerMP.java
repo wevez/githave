@@ -1,5 +1,7 @@
 package net.minecraft.client.multiplayer;
 
+import githave.GitHave;
+import githave.event.Events;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -28,8 +30,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
-import githave.GitHave;
-import githave.event.Events;
 
 public class PlayerControllerMP
 {
@@ -37,11 +37,11 @@ public class PlayerControllerMP
     private final NetHandlerPlayClient netClientHandler;
     private BlockPos currentBlock = new BlockPos(-1, -1, -1);
     private ItemStack currentItemHittingBlock;
-    public static float curBlockDamageMP;
+    private float curBlockDamageMP;
     private float stepSoundTickCounter;
     private int blockHitDelay;
     private boolean isHittingBlock;
-    public WorldSettings.GameType currentGameType = WorldSettings.GameType.SURVIVAL;
+    private WorldSettings.GameType currentGameType = WorldSettings.GameType.SURVIVAL;
     private int currentPlayerItem;
 
     public PlayerControllerMP(Minecraft mcIn, NetHandlerPlayClient netHandler)
@@ -328,7 +328,7 @@ public class PlayerControllerMP
         return pos.equals(this.currentBlock) && flag;
     }
 
-    public void syncCurrentPlayItem()
+    private void syncCurrentPlayItem()
     {
         int i = this.mc.thePlayer.inventory.currentItem;
 

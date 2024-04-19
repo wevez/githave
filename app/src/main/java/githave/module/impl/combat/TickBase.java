@@ -344,10 +344,9 @@ public class TickBase extends Module {
         double finalDistance = distance - 3;
 
         if (preLoad.getValue()) {
-            // +1が動くかどうか
             smartMaxBalance = 1 + finalDistance / (playerBPS + (targetBPS * 3));
         } else {
-            smartMaxBalance = 1 + finalDistance / (playerBPS * 2);
+            smartMaxBalance = finalDistance / (playerBPS * 2);
         }
     }
 
@@ -399,7 +398,7 @@ public class TickBase extends Module {
             stop = true;
         }
 
-        if ((MoveUtil.getSpeed() <= 0.08 || !mc.gameSettings.keyBindForward.pressed
+        if ((MoveUtil.getSpeed() <= 0.08 || !mc.gameSettings.keyBindForward.isPressed()
                 || predictedDistance > mc.thePlayer.getDistanceToEntity(target) + 0.08) && onlyForward.getValue()) {
             stop = true;
         }

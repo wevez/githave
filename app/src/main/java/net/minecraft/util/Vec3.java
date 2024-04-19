@@ -2,14 +2,6 @@ package net.minecraft.util;
 
 public class Vec3
 {
-    public double distanceXZTo(final Vec3 vec) {
-        double d0 = vec.xCoord - this.xCoord;
-        double d2 = vec.zCoord - this.zCoord;
-        return MathHelper.sqrt_double(d0 * d0 + d2 * d2);
-    }
-    public Vec3 multiply(double multiplier) {
-        return new Vec3(this.xCoord * multiplier, this.yCoord * multiplier, this.zCoord * multiplier);
-    }
     public final double xCoord;
     public final double yCoord;
     public final double zCoord;

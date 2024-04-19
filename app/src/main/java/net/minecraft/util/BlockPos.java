@@ -6,10 +6,6 @@ import net.minecraft.entity.Entity;
 
 public class BlockPos extends Vec3i
 {
-
-    public boolean equalsBlockPos(final BlockPos blockPos) {
-        return this.getX() == blockPos.getX() && this.getY() == blockPos.getY() && this.getZ() == blockPos.getZ();
-    }
     public static final BlockPos ORIGIN = new BlockPos(0, 0, 0);
     private static final int NUM_X_BITS = 1 + MathHelper.calculateLogBaseTwo(MathHelper.roundUpToPowerOfTwo(30000000));
     private static final int NUM_Z_BITS = NUM_X_BITS;

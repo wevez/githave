@@ -17,7 +17,7 @@ public class FrameEvent
 
             if (integer == null)
             {
-                integer = (i);
+                integer = i;
                 mapEventFrames.put(name, integer);
             }
 
@@ -29,7 +29,7 @@ public class FrameEvent
             }
             else
             {
-                mapEventFrames.put(name, (i));
+                mapEventFrames.put(name, i);
                 return true;
             }
         }

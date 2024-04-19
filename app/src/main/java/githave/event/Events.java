@@ -11,27 +11,11 @@ import net.minecraft.world.World;
 
 public class Events {
 
-    public static class AirCollide extends EventArgument {
-        public AxisAlignedBB returnValue;
-        public World worldIn;
-        public BlockPos pos;
-        public IBlockState state;
-        public double minX, minY, minZ, maxX, maxY, maxZ;
-        public AirCollide(World worldIn, BlockPos pos, IBlockState state, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-            this.worldIn = worldIn;
-            this.pos = pos;
-            this.state = state;
-            this.minX = minX;
-            this.minY = minY;
-            this.minZ = minZ;
-            this.maxX = maxX;
-            this.maxY = maxY;
-            this.maxZ = maxZ;
-        }
+    public static class WorldChange extends EventArgument {
 
         @Override
         public void call(EventListener listener) {
-            listener.onAirCollide(this);
+
         }
     }
 
@@ -127,27 +111,6 @@ public class Events {
         }
     }
 
-    public static class WorldChange extends EventArgument {
-        @Override
-        public void call(EventListener listener) {
-            listener.onWorldChange(this);
-        }
-    }
-
-    public static class Reach extends EventArgument {
-
-        public double reach;
-
-        public Reach(double reach) {
-            this.reach = reach;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onReach(this);
-        }
-    }
-
     public static class Rotation extends EventArgument {
 
         public float yaw, pitch;
@@ -195,110 +158,6 @@ public class Events {
         }
     }
 
-    public static class NametagRenderer extends EventArgument {
-
-        public final Entity e;
-
-        public NametagRenderer(Entity e) {
-            this.e = e;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onNametagRenderer(this);
-        }
-    }
-
-    public static class ModelPlayer extends EventArgument {
-
-        public AbstractClientPlayer player;
-        public ModelPlayer model;
-
-        public ModelPlayer(AbstractClientPlayer player, ModelPlayer model) {
-            this.player = player;
-            this.model = model;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onModelPlayer(this);
-        }
-    }
-
-    public static class EntityRenderer extends EventArgument {
-
-        public final boolean pre;
-
-        public final Entity e;
-
-        public EntityRenderer(boolean pre, Entity e) {
-            this.e = e;
-            this.pre = pre;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onEntityRenderer(this);
-        }
-    }
-
-    public static class RenderTileEntity extends EventArgument {
-
-        public final TileEntity entity;
-
-        public RenderTileEntity(TileEntity entity) {
-            this.entity = entity;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onRenderTileEntity(this);
-        }
-    }
-
-    public static class SafeWalk extends EventArgument {
-        public boolean safe;
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onSafeWalk(this);
-        }
-    }
-
-    public static class Ground extends EventArgument {
-
-        public boolean onGround;
-
-        public Ground(boolean onGround) {
-            this.onGround = onGround;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onGround(this);
-        }
-    }
-
-    public static class Knockback extends EventArgument {
-        public double motion = 0.6;
-        public boolean full, strong, reduceY;
-        public int power, postPower;
-
-        public Knockback(double motion, boolean full, int power, int postPower, boolean strong, boolean reduceY) {
-            this.motion = motion;
-            this.full = full;
-            this.power = power;
-            this.postPower = postPower;
-            this.strong = strong;
-            this.reduceY = reduceY;
-        }
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onKnockback(this);
-        }
-    }
-
     public static class GetPacket extends EventArgument {
 
         public final boolean pre;
@@ -331,6 +190,26 @@ public class Events {
         }
     }
 
+    public static class Knockback extends EventArgument {
+        public double motion = 0.6;
+        public boolean full, strong, reduceY;
+        public int power, postPower;
+
+        public Knockback(double motion, boolean full, int power, int postPower, boolean strong, boolean reduceY) {
+            this.motion = motion;
+            this.full = full;
+            this.power = power;
+            this.postPower = postPower;
+            this.strong = strong;
+            this.reduceY = reduceY;
+        }
+
+        @Override
+        public void call(EventListener listener) {
+            listener.onKnockback(this);
+        }
+    }
+
     public static class MoveButton extends EventArgument {
 
         public boolean left;
@@ -352,14 +231,6 @@ public class Events {
         @Override
         public void call(EventListener listener) {
             listener.onMoveButton(this);
-        }
-    }
-
-    public static class PlayerPush extends EventArgument {
-
-        @Override
-        public void call(EventListener listener) {
-            listener.onPlayerPush(this);
         }
     }
 }

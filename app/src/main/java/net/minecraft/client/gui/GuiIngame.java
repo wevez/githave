@@ -6,6 +6,11 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+
+import githave.GitHave;
+import githave.event.Events;
+import githave.gui.click.ClickGui;
+import githave.util.render.BlurUtil;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -127,6 +132,14 @@ public class GuiIngame extends Gui
                 this.renderPortal(f, scaledresolution);
             }
         }
+        GitHave.INSTANCE.eventManager.call(pre);
+        if (mc.currentScreen instanceof ClickGui) {
+//            GitHave.INSTANCE.clickGui.a();
+        }
+        if (!mc.gameSettings.ofFastRender) {
+            BlurUtil.blur();
+        }
+        GitHave.INSTANCE.eventManager.call(post);
 
         if (this.mc.playerController.isSpectator())
         {
@@ -331,6 +344,9 @@ public class GuiIngame extends Gui
         GlStateManager.disableLighting();
         GlStateManager.enableAlpha();
     }
+
+    private final Events.PostRenderGui post = new Events.PostRenderGui();
+    private final Events.PreRenderGui pre = new Events.PreRenderGui();
 
     protected void renderTooltip(ScaledResolution sr, float partialTicks)
     {

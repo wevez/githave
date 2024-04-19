@@ -23,6 +23,11 @@ public class Tezzelator
         t.getWorldRenderer().color(p_color_1_, p_color_2_, p_color_3_, p_color_4_);
     }
 
+    public void tex2(short p_tex2_1_, short p_tex2_2_)
+    {
+        t.getWorldRenderer().lightmap(p_tex2_1_, p_tex2_2_);
+    }
+
     public void normal(float p_normal_1_, float p_normal_2_, float p_normal_3_)
     {
         t.getWorldRenderer().normal(p_normal_1_, p_normal_2_, p_normal_3_);

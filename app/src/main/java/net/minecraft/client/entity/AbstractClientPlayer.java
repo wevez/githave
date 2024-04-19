@@ -22,8 +22,6 @@ import net.minecraft.world.WorldSettings;
 import net.optifine.player.CapeUtils;
 import net.optifine.player.PlayerConfigurations;
 import net.optifine.reflect.Reflector;
-import githave.GitHave;
-import githave.event.Events;
 
 public abstract class AbstractClientPlayer extends EntityPlayer
 {
@@ -211,6 +209,7 @@ public abstract class AbstractClientPlayer extends EntityPlayer
     }
 
     public Vec3 getLook(float partialTicks)
-    { return this.getVectorForRotation(this.rotationPitch, this.rotationYaw);
+    {
+        return this.getVectorForRotation(this.rotationPitch, this.rotationYaw);
     }
 }

@@ -30,8 +30,6 @@ import net.minecraft.util.ReportedException;
 import net.minecraft.world.World;
 import net.optifine.EmissiveTextures;
 import net.optifine.reflect.Reflector;
-import githave.GitHave;
-import githave.event.Events;
 
 public class TileEntityRendererDispatcher
 {
@@ -163,8 +161,6 @@ public class TileEntityRendererDispatcher
 
     public void renderTileEntityAt(TileEntity tileEntityIn, double x, double y, double z, float partialTicks, int destroyStage)
     {
-        GitHave.INSTANCE.eventManager.call(new Events.RenderTileEntity(tileEntityIn));
-
         TileEntitySpecialRenderer<TileEntity> tileentityspecialrenderer = this.<TileEntity>getSpecialRenderer(tileEntityIn);
 
         if (tileentityspecialrenderer != null)

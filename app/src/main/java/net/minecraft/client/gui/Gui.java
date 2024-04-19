@@ -12,7 +12,7 @@ public class Gui
     public static final ResourceLocation optionsBackground = new ResourceLocation("textures/gui/options_background.png");
     public static final ResourceLocation statIcons = new ResourceLocation("textures/gui/container/stats_icons.png");
     public static final ResourceLocation icons = new ResourceLocation("textures/gui/icons.png");
-    protected static float zLevel;
+    protected float zLevel;
 
     protected void drawHorizontalLine(int startX, int endX, int y, int color)
     {
@@ -38,20 +38,20 @@ public class Gui
         drawRect(x, startY + 1, x + 1, endY, color);
     }
 
-    public static void drawRect(double d, double e, double g, double h, int color)
+    public static void drawRect(int left, int top, int right, int bottom, int color)
     {
-        if (d < g)
+        if (left < right)
         {
-            double i = d;
-            d = g;
-            g = i;
+            int i = left;
+            left = right;
+            right = i;
         }
 
-        if (e < h)
+        if (top < bottom)
         {
-            double j = e;
-            e = h;
-            h = j;
+            int j = top;
+            top = bottom;
+            bottom = j;
         }
 
         float f3 = (float)(color >> 24 & 255) / 255.0F;
@@ -65,16 +65,16 @@ public class Gui
         GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
         GlStateManager.color(f, f1, f2, f3);
         worldrenderer.begin(7, DefaultVertexFormats.POSITION);
-        worldrenderer.pos((double)d, (double)h, 0.0D).endVertex();
-        worldrenderer.pos((double)g, (double)h, 0.0D).endVertex();
-        worldrenderer.pos((double)g, (double)e, 0.0D).endVertex();
-        worldrenderer.pos((double)d, (double)e, 0.0D).endVertex();
+        worldrenderer.pos((double)left, (double)bottom, 0.0D).endVertex();
+        worldrenderer.pos((double)right, (double)bottom, 0.0D).endVertex();
+        worldrenderer.pos((double)right, (double)top, 0.0D).endVertex();
+        worldrenderer.pos((double)left, (double)top, 0.0D).endVertex();
         tessellator.draw();
         GlStateManager.enableTexture2D();
         GlStateManager.disableBlend();
     }
 
-    public static void drawGradientRect(double d, double e, double g, double h, int startColor, int endColor)
+    protected void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor)
     {
         float f = (float)(startColor >> 24 & 255) / 255.0F;
         float f1 = (float)(startColor >> 16 & 255) / 255.0F;
@@ -92,38 +92,10 @@ public class Gui
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        worldrenderer.pos((double)g, (double)e, (double)zLevel).color(f1, f2, f3, f).endVertex();
-        worldrenderer.pos((double)d, (double)e, (double)zLevel).color(f1, f2, f3, f).endVertex();
-        worldrenderer.pos((double)d, (double)h, (double)zLevel).color(f5, f6, f7, f4).endVertex();
-        worldrenderer.pos((double)g, (double)h, (double)zLevel).color(f5, f6, f7, f4).endVertex();
-        tessellator.draw();
-        GlStateManager.shadeModel(7424);
-        GlStateManager.disableBlend();
-        GlStateManager.enableAlpha();
-        GlStateManager.enableTexture2D();
-    }
-    public static void drawGradientRectSideways(double d, double e, double g, double h, int startColor, int endColor)
-    {
-        float f = (float)(startColor >> 24 & 255) / 255.0F;
-        float f1 = (float)(startColor >> 16 & 255) / 255.0F;
-        float f2 = (float)(startColor >> 8 & 255) / 255.0F;
-        float f3 = (float)(startColor & 255) / 255.0F;
-        float f4 = (float)(endColor >> 24 & 255) / 255.0F;
-        float f5 = (float)(endColor >> 16 & 255) / 255.0F;
-        float f6 = (float)(endColor >> 8 & 255) / 255.0F;
-        float f7 = (float)(endColor & 255) / 255.0F;
-        GlStateManager.disableTexture2D();
-        GlStateManager.enableBlend();
-        GlStateManager.disableAlpha();
-        GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-        GlStateManager.shadeModel(7425);
-        Tessellator tessellator = Tessellator.getInstance();
-        WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        worldrenderer.pos((double)g, (double)e, (double)zLevel).color(f1, f2, f3, f).endVertex();
-        worldrenderer.pos((double)d, (double)e, (double)zLevel).color(f5, f6, f7, f4).endVertex();
-        worldrenderer.pos((double)d, (double)h, (double)zLevel).color(f5, f6, f7, f4).endVertex();
-        worldrenderer.pos((double)g, (double)h, (double)zLevel).color(f1, f2, f3, f).endVertex();
+        worldrenderer.pos((double)right, (double)top, (double)this.zLevel).color(f1, f2, f3, f).endVertex();
+        worldrenderer.pos((double)left, (double)top, (double)this.zLevel).color(f1, f2, f3, f).endVertex();
+        worldrenderer.pos((double)left, (double)bottom, (double)this.zLevel).color(f5, f6, f7, f4).endVertex();
+        worldrenderer.pos((double)right, (double)bottom, (double)this.zLevel).color(f5, f6, f7, f4).endVertex();
         tessellator.draw();
         GlStateManager.shadeModel(7424);
         GlStateManager.disableBlend();
@@ -181,21 +153,21 @@ public class Gui
         tessellator.draw();
     }
 
-    public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, double d, double e, double g, double h)
+    public static void drawModalRectWithCustomSizedTexture(int x, int y, float u, float v, int width, int height, float textureWidth, float textureHeight)
     {
-        float f = (float)(1.0F / g);
-        float f1 = (float)(1.0F / h);
+        float f = 1.0F / textureWidth;
+        float f1 = 1.0F / textureHeight;
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos((double)x, (double)(y + e), 0.0D).tex((double)(u * f), (double)((v + (float)e) * f1)).endVertex();
-        worldrenderer.pos((double)(x + d), (double)(y + e), 0.0D).tex((double)((u + (float)d) * f), (double)((v + (float)e) * f1)).endVertex();
-        worldrenderer.pos((double)(x + d), (double)y, 0.0D).tex((double)((u + (float)d) * f), (double)(v * f1)).endVertex();
+        worldrenderer.pos((double)x, (double)(y + height), 0.0D).tex((double)(u * f), (double)((v + (float)height) * f1)).endVertex();
+        worldrenderer.pos((double)(x + width), (double)(y + height), 0.0D).tex((double)((u + (float)width) * f), (double)((v + (float)height) * f1)).endVertex();
+        worldrenderer.pos((double)(x + width), (double)y, 0.0D).tex((double)((u + (float)width) * f), (double)(v * f1)).endVertex();
         worldrenderer.pos((double)x, (double)y, 0.0D).tex((double)(u * f), (double)(v * f1)).endVertex();
         tessellator.draw();
     }
 
-    public static void drawScaledCustomSizeModalRect(double x, double y, float u, float v, double uWidth, double vHeight, double width, double height, float tileWidth, float tileHeight)
+    public static void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width, int height, float tileWidth, float tileHeight)
     {
         float f = 1.0F / tileWidth;
         float f1 = 1.0F / tileHeight;
@@ -208,6 +180,4 @@ public class Gui
         worldrenderer.pos((double)x, (double)y, 0.0D).tex((double)(u * f), (double)(v * f1)).endVertex();
         tessellator.draw();
     }
-
-
 }

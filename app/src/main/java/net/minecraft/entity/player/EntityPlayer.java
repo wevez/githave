@@ -1,13 +1,14 @@
 package net.minecraft.entity.player;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.mojang.authlib.GameProfile;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.mojang.authlib.GameProfile;
-
+import githave.GitHave;
+import githave.event.Events;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.BlockDirectional;
@@ -77,8 +78,6 @@ import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.LockCode;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
-import githave.GitHave;
-import githave.event.Events;
 
 @SuppressWarnings("incomplete-switch")
 public abstract class EntityPlayer extends EntityLivingBase
@@ -115,7 +114,7 @@ public abstract class EntityPlayer extends EntityLivingBase
     private ItemStack itemInUse;
     private int itemInUseCount;
     protected float speedOnGround = 0.1F;
-    public float speedInAir = 0.02F;
+    protected float speedInAir = 0.02F;
     private int lastXPSound;
     private final GameProfile gameProfile;
     private boolean hasReducedDebug = false;
@@ -380,7 +379,7 @@ public abstract class EntityPlayer extends EntityLivingBase
         {
             for (int i = 0; i < p_71010_2_; ++i)
             {
-                Vec3 vec3 = new Vec3(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D);
+                Vec3 vec3 = new Vec3(((double)this.rand.nextFloat() - 0.5D) * 0.1D, 1 * 0.1D + 0.1D, 0.0D);
                 vec3 = vec3.rotatePitch(-this.rotationPitch * (float)Math.PI / 180.0F);
                 vec3 = vec3.rotateYaw(-this.rotationYaw * (float)Math.PI / 180.0F);
                 double d0 = (double)(-this.rand.nextFloat()) * 0.6D - 0.3D;
@@ -624,8 +623,8 @@ public abstract class EntityPlayer extends EntityLivingBase
 
         if (cause != null)
         {
-            this.motionX = (double)(-Math.cos((this.attackedAtYaw + this.rotationYaw) * (float)Math.PI / 180.0F) * 0.1F);
-            this.motionZ = (double)(-Math.sin((this.attackedAtYaw + this.rotationYaw) * (float)Math.PI / 180.0F) * 0.1F);
+            this.motionX = (double)(-(float) Math.cos((this.attackedAtYaw + this.rotationYaw) * (float)Math.PI / 180.0F) * 0.1F);
+            this.motionZ = (double)(-(float) Math.sin((this.attackedAtYaw + this.rotationYaw) * (float)Math.PI / 180.0F) * 0.1F);
         }
         else
         {
@@ -737,16 +736,16 @@ public abstract class EntityPlayer extends EntityLivingBase
             {
                 float f = this.rand.nextFloat() * 0.5F;
                 float f1 = this.rand.nextFloat() * (float)Math.PI * 2.0F;
-                entityitem.motionX = (double)(-Math.sin(f1) * f);
-                entityitem.motionZ = (double)(Math.cos(f1) * f);
+                entityitem.motionX = (double)(-(float) Math.sin(f1) * f);
+                entityitem.motionZ = (double)((float) Math.cos(f1) * f);
                 entityitem.motionY = 0.20000000298023224D;
             }
             else
             {
                 float f2 = 0.3F;
-                entityitem.motionX = (double)(-Math.sin(this.rotationYaw / 180.0F * (float)Math.PI) * Math.cos(this.rotationPitch / 180.0F * (float)Math.PI) * f2);
-                entityitem.motionZ = (double)(Math.cos(this.rotationYaw / 180.0F * (float)Math.PI) * Math.cos(this.rotationPitch / 180.0F * (float)Math.PI) * f2);
-                entityitem.motionY = (double)(-Math.sin(this.rotationPitch / 180.0F * (float)Math.PI) * f2 + 0.1F);
+                entityitem.motionX = (double)(-(float) Math.sin(this.rotationYaw / 180.0F * (float)Math.PI) * (float) Math.cos(this.rotationPitch / 180.0F * (float)Math.PI) * f2);
+                entityitem.motionZ = (double)((float) Math.cos(this.rotationYaw / 180.0F * (float)Math.PI) * (float) Math.cos(this.rotationPitch / 180.0F * (float)Math.PI) * f2);
+                entityitem.motionY = (double)(-(float) Math.sin(this.rotationPitch / 180.0F * (float)Math.PI) * f2 + 0.1F);
                 float f3 = this.rand.nextFloat() * (float)Math.PI * 2.0F;
                 f2 = 0.02F * this.rand.nextFloat();
                 entityitem.motionX += Math.cos((double)f3) * (double)f2;

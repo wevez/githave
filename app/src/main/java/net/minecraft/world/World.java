@@ -54,8 +54,6 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.MapStorage;
 import net.minecraft.world.storage.WorldInfo;
-import githave.GitHave;
-import githave.event.Events;
 
 public abstract class World implements IBlockAccess
 {
@@ -329,24 +327,6 @@ public abstract class World implements IBlockAccess
 
     public boolean destroyBlock(BlockPos pos, boolean dropBlock)
     {
-//        IBlockState iblockstate = this.getBlockState(pos);
-//        Block block = iblockstate.getBlock();
-//
-//        if (block.getMaterial() == Material.air)
-//        {
-//            return false;
-//        }
-//        else
-//        {
-//            this.playAuxSFX(2001, pos, Block.getStateId(iblockstate));
-//
-//            if (dropBlock)
-//            {
-//                block.dropBlockAsItem(this, pos, iblockstate, 0);
-//            }
-//
-//            return this.setBlockState(pos, Blocks.air.getDefaultState(), 3);
-//        }
         return FixedSoundEngine.destroyBlock(this, pos, dropBlock);
     }
 
@@ -1941,15 +1921,9 @@ public abstract class World implements IBlockAccess
             {
                 vec3 = vec3.normalize();
                 double d1 = 0.014D;
-                Events.PlayerPush event = new Events.PlayerPush();
-
-                GitHave.INSTANCE.eventManager.call(event);
-
-                if(!event.isCanceled()) {
-                    entityIn.motionX += vec3.xCoord * d1;
-                    entityIn.motionY += vec3.yCoord * d1;
-                    entityIn.motionZ += vec3.zCoord * d1;
-                }
+                entityIn.motionX += vec3.xCoord * d1;
+                entityIn.motionY += vec3.yCoord * d1;
+                entityIn.motionZ += vec3.zCoord * d1;
             }
 
             return flag;

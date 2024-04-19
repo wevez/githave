@@ -308,17 +308,17 @@ public class FontRenderer implements IResourceManagerReloadListener
         }
     }
 
-    public int drawStringWithShadow(String text, double x, double y, int color)
+    public int drawStringWithShadow(String text, float x, float y, int color)
     {
         return this.drawString(text, x, y, color, true);
     }
 
-    public int drawString(String text, double d, double e, int color)
+    public int drawString(String text, int x, int y, int color)
     {
-        return this.drawString(text, (float)d, (float)e, color, false);
+        return this.drawString(text, (float)x, (float)y, color, false);
     }
 
-    public int drawString(String text, double x, double y, int color, boolean dropShadow)
+    public int drawString(String text, float x, float y, int color, boolean dropShadow)
     {
         this.enableAlpha();
 
@@ -555,7 +555,7 @@ public class FontRenderer implements IResourceManagerReloadListener
         return this.renderString(text, (float)x, (float)y, color, dropShadow);
     }
 
-    private int renderString(String text, double d, double e, int color, boolean dropShadow)
+    private int renderString(String text, float x, float y, int color, boolean dropShadow)
     {
         if (text == null)
         {
@@ -583,8 +583,8 @@ public class FontRenderer implements IResourceManagerReloadListener
             this.green = (float)(color & 255) / 255.0F;
             this.alpha = (float)(color >> 24 & 255) / 255.0F;
             this.setColor(this.red, this.blue, this.green, this.alpha);
-            this.posX = (float) d;
-            this.posY = (float) e;
+            this.posX = x;
+            this.posY = y;
             this.renderStringAtPos(text, dropShadow);
             return (int)this.posX;
         }

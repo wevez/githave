@@ -95,7 +95,7 @@ public class Backtrack extends Module {
 
         if (event.packet instanceof S14PacketEntity) {
             S14PacketEntity packet = (S14PacketEntity) event.packet;
-            Entity entity = mc.theWorld.getEntityByID(packet.entityId);
+            Entity entity = packet.getEntity(mc.theWorld);
 
             if (entity instanceof EntityLivingBase) {
                 EntityLivingBase entityLivingBase = (EntityLivingBase) entity;
@@ -237,20 +237,21 @@ public class Backtrack extends Module {
             if (entity != null && entity != mc.thePlayer && !entity.isInvisible() && render) {
                 if(entity == null || entity.width == 0 || entity.height == 0)return;
 
-                double x = entity.realPosX / 32D - mc.getRenderManager().renderPosX;
-                double y = entity.realPosY / 32D - mc.getRenderManager().renderPosY;
-                double z = entity.realPosZ / 32D - mc.getRenderManager().renderPosZ;
-
-                ColorUtil.glColor(0xa0ff0000);
-                Render3DUtil.drawBoundingBox(
-                        x - entity.width / 2,
-                        y,
-                        z - entity.width / 2,
-                        x + entity.width / 2,
-                        y + entity.height,
-                        z + entity.width / 2
-                );
-                ColorUtil.resetColor();
+                // TODO: ESP
+//                double x = entity.realPosX / 32D - mc.getRenderManager().renderPosX;
+//                double y = entity.realPosY / 32D - mc.getRenderManager().renderPosY;
+//                double z = entity.realPosZ / 32D - mc.getRenderManager().renderPosZ;
+//
+//                ColorUtil.glColor(0xa0ff0000);
+//                Render3DUtil.drawBoundingBox(
+//                        x - entity.width / 2,
+//                        y,
+//                        z - entity.width / 2,
+//                        x + entity.width / 2,
+//                        y + entity.height,
+//                        z + entity.width / 2
+//                );
+//                ColorUtil.resetColor();
             }
         }
         super.onRender3D(event);
@@ -270,7 +271,7 @@ public class Backtrack extends Module {
                         packets.get(0).processPacket(netHandler);
                         if (packets.get(0) instanceof S14PacketEntity) {
                             S14PacketEntity packet = (S14PacketEntity) packets.get(0);
-                            final Entity entity = mc.theWorld.getEntityByID(packet.entityId);
+                            final Entity entity = packet.getEntity(mc.theWorld);
 
                             if (entity instanceof EntityLivingBase) {
                                 EntityLivingBase entityLivingBase = (EntityLivingBase) entity;

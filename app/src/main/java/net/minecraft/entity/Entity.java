@@ -15,7 +15,6 @@ import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.state.pattern.BlockPattern;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.command.CommandResultStats;
 import net.minecraft.command.ICommandSender;
@@ -51,9 +50,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import githave.GitHave;
-import githave.event.Events;
-
 
 public abstract class Entity implements ICommandSender
 {
@@ -467,11 +463,7 @@ public abstract class Entity implements ICommandSender
             double d5 = z;
             boolean flag = this.onGround && this.isSneaking() && this instanceof EntityPlayer;
 
-            Events.SafeWalk event = new Events.SafeWalk();
-            event.safe = flag;
-            GitHave.INSTANCE.eventManager.call(event);
-
-            if (event.safe)
+            if (flag)
             {
                 double d6;
 
@@ -663,13 +655,7 @@ public abstract class Entity implements ICommandSender
             this.resetPositionToBB();
             this.isCollidedHorizontally = d3 != x || d5 != z;
             this.isCollidedVertically = d4 != y;
-
-            Events.Ground eventa = new Events.Ground(this.isCollidedVertically && d4 < 0.0D);
-
-            GitHave.INSTANCE.eventManager.call(eventa);
-
-            this.onGround = eventa.onGround;
-
+            this.onGround = this.isCollidedVertically && d4 < 0.0D;
             this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
             int i = MathHelper.floor_double(this.posX);
             int j = MathHelper.floor_double(this.posY - 0.20000000298023224D);
@@ -1078,6 +1064,12 @@ public abstract class Entity implements ICommandSender
         this.prevPosZ = this.posZ = z;
         this.prevRotationYaw = this.rotationYaw = yaw;
         this.prevRotationPitch = this.rotationPitch = pitch;
+        if (this instanceof EntityPlayerSP) {
+            RotationManager.virtualPitch = rotationPitch;
+            RotationManager.virtualPrevPitch = rotationPitch;
+            RotationManager.virtualPrevYaw = rotationYaw;
+            RotationManager.virtualYaw = rotationYaw;
+        }
         double d0 = (double)(this.prevRotationYaw - yaw);
 
         if (d0 < -180.0D)
@@ -1106,12 +1098,13 @@ public abstract class Entity implements ICommandSender
         this.lastTickPosZ = this.prevPosZ = this.posZ = z;
         this.rotationYaw = yaw;
         this.rotationPitch = pitch;
+        if (this instanceof EntityPlayerSP) {
+            RotationManager.virtualPitch = rotationPitch;
+            RotationManager.virtualPrevPitch = rotationPitch;
+            RotationManager.virtualPrevYaw = rotationYaw;
+            RotationManager.virtualYaw = rotationYaw;
+        }
         this.setPosition(this.posX, this.posY, this.posZ);
-    }
-
-    public double getNearestDistanceToEntity(Entity entity) {
-        Vec3 nearest = AlgebraUtil.nearest(entity.boundingBox, this.getPositionEyes(1f));
-        return this.getDistance(nearest.xCoord, nearest.yCoord, nearest.zCoord);
     }
 
     public float getDistanceToEntity(Entity entityIn)
@@ -1120,15 +1113,6 @@ public abstract class Entity implements ICommandSender
         float f1 = (float)(this.posY - entityIn.posY);
         float f2 = (float)(this.posZ - entityIn.posZ);
         return MathHelper.sqrt_float(f * f + f1 * f1 + f2 * f2);
-    }
-
-    public float getDistanceToEntityRender(final Entity entityIn)
-    {
-        Minecraft mc = Minecraft.getMinecraft();
-        float x = (float)(entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * mc.timer.renderPartialTicks - (mc.getRenderManager()).renderPosX);
-        float y = (float)(entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * mc.timer.renderPartialTicks - (mc.getRenderManager()).renderPosY);
-        float z = (float)(entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * mc.timer.renderPartialTicks - (mc.getRenderManager()).renderPosZ);
-        return MathHelper.sqrt_float(x * x + y * y + z * z);
     }
 
     public double getDistanceSq(double x, double y, double z)
@@ -1252,11 +1236,11 @@ public abstract class Entity implements ICommandSender
         }
     }
 
-    public final Vec3 getVectorForRotation(float pitch, float yaw)
+    protected final Vec3 getVectorForRotation(float pitch, float yaw)
     {
         float f = (float) Math.cos(-yaw * 0.017453292F - (float)Math.PI);
         float f1 = (float) Math.sin(-yaw * 0.017453292F - (float)Math.PI);
-        float f2 = (float) -Math.cos(-pitch * 0.017453292F);
+        float f2 = -(float) Math.cos(-pitch * 0.017453292F);
         float f3 = (float) Math.sin(-pitch * 0.017453292F);
         return new Vec3((double)(f1 * f2), (double)f3, (double)(f * f2));
     }
@@ -1282,18 +1266,6 @@ public abstract class Entity implements ICommandSender
         Vec3 vec31 = this.getLook(partialTicks);
         Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
         return this.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
-    }
-
-    public MovingObjectPosition rayTraceCustom(final double blockReachDistance, final float partialTicks, final float yaw, final float pitch)
-    {
-        final Vec3 vec3 = this.getPositionEyes(partialTicks);
-        final Vec3 vec31 = this.getLookCustom(yaw, pitch);
-        final Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
-        return this.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
-    }
-    public Vec3 getLookCustom(final float yaw, final float pitch)
-    {
-        return this.getVectorForRotation(pitch, yaw);
     }
 
     public boolean canBeCollidedWith()
@@ -1446,6 +1418,12 @@ public abstract class Entity implements ICommandSender
             this.prevPosZ = this.lastTickPosZ = this.posZ = nbttaglist.getDoubleAt(2);
             this.prevRotationYaw = this.rotationYaw = nbttaglist2.getFloatAt(0);
             this.prevRotationPitch = this.rotationPitch = nbttaglist2.getFloatAt(1);
+            if (this instanceof EntityPlayerSP) {
+                RotationManager.virtualPitch = rotationPitch;
+                RotationManager.virtualPrevPitch = rotationPitch;
+                RotationManager.virtualPrevYaw = rotationYaw;
+                RotationManager.virtualYaw = rotationYaw;
+            }
             this.setRotationYawHead(this.rotationYaw);
             this.setRenderYawOffset(this.rotationYaw);
             this.fallDistance = tagCompund.getFloat("FallDistance");
@@ -2382,4 +2360,13 @@ public abstract class Entity implements ICommandSender
 
         EnchantmentHelper.applyArthropodEnchantments(entityLivingBaseIn, entityIn);
     }
+
+    public double getNearestDistanceToEntity(Entity entity) {
+        Vec3 nearest = AlgebraUtil.nearest(entity.boundingBox, this.getPositionEyes(1f));
+        return this.getDistance(nearest.xCoord, nearest.yCoord, nearest.zCoord);
+    }
+
+    public double realPosX;
+    public double realPosY;
+    public double realPosZ;
 }

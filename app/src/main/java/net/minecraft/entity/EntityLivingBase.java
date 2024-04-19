@@ -1,20 +1,17 @@
 package net.minecraft.entity;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.BaseAttributeMap;
@@ -53,8 +50,6 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import githave.GitHave;
-import githave.event.Events;
 
 public abstract class EntityLivingBase extends Entity
 {
@@ -62,7 +57,7 @@ public abstract class EntityLivingBase extends Entity
     private static final AttributeModifier sprintingSpeedBoostModifier = (new AttributeModifier(sprintingSpeedBoostModifierUUID, "Sprinting speed boost", 0.30000001192092896D, 2)).setSaved(false);
     private BaseAttributeMap attributeMap;
     private final CombatTracker _combatTracker = new CombatTracker(this);
-    public final Map<Integer, PotionEffect> activePotionsMap = Maps.<Integer, PotionEffect>newHashMap();
+    private final Map<Integer, PotionEffect> activePotionsMap = Maps.<Integer, PotionEffect>newHashMap();
     private final ItemStack[] previousEquipment = new ItemStack[5];
     public boolean isSwingInProgress;
     public int swingProgressInt;
@@ -97,7 +92,7 @@ public abstract class EntityLivingBase extends Entity
     protected float unused180;
     protected int scoreValue;
     protected float lastDamage;
-    public boolean isJumping;
+    protected boolean isJumping;
     public float moveStrafing;
     public float moveForward;
     protected float randomYawVelocity;
@@ -113,7 +108,7 @@ public abstract class EntityLivingBase extends Entity
     private EntityLivingBase lastAttacker;
     private int lastAttackerTime;
     private float landMovementFactor;
-    public int jumpTicks;
+    private int jumpTicks;
     private float absorptionAmount;
 
     public void onKillCommand()
@@ -127,10 +122,10 @@ public abstract class EntityLivingBase extends Entity
         this.applyEntityAttributes();
         this.setHealth(this.getMaxHealth());
         this.preventEntitySpawning = true;
-        this.randomUnused1 = (float)((Math.random() + 1.0D) * 0.009999999776482582D);
+        this.randomUnused1 = (float)((1 + 1.0D) * 0.009999999776482582D);
         this.setPosition(this.posX, this.posY, this.posZ);
-        this.randomUnused2 = (float)Math.random() * 12398.0F;
-        this.rotationYaw = (float)(Math.random() * Math.PI * 2.0D);
+        this.randomUnused2 = (float)1 * 12398.0F;
+        this.rotationYaw = (float)(1 * Math.PI * 2.0D);
         this.rotationYawHead = this.rotationYaw;
         this.stepHeight = 0.6F;
     }
@@ -825,9 +820,9 @@ public abstract class EntityLivingBase extends Entity
                         double d1 = entity.posX - this.posX;
                         double d0;
 
-                        for (d0 = entity.posZ - this.posZ; d1 * d1 + d0 * d0 < 1.0E-4D; d0 = (Math.random() - Math.random()) * 0.01D)
+                        for (d0 = entity.posZ - this.posZ; d1 * d1 + d0 * d0 < 1.0E-4D; d0 = (1 - 1) * 0.01D)
                         {
-                            d1 = (Math.random() - Math.random()) * 0.01D;
+                            d1 = (1 - 1) * 0.01D;
                         }
 
                         this.attackedAtYaw = (float)(Math.atan2(d0, d1) * 180.0D / Math.PI - (double)this.rotationYaw);
@@ -835,7 +830,7 @@ public abstract class EntityLivingBase extends Entity
                     }
                     else
                     {
-                        this.attackedAtYaw = (float)((int)(Math.random() * 2.0D) * 180);
+                        this.attackedAtYaw = (float)((int)(1 * 2.0D) * 180);
                     }
                 }
 
@@ -871,7 +866,7 @@ public abstract class EntityLivingBase extends Entity
 
         for (int i = 0; i < 5; ++i)
         {
-            Vec3 vec3 = new Vec3(((double)this.rand.nextFloat() - 0.5D) * 0.1D, Math.random() * 0.1D + 0.1D, 0.0D);
+            Vec3 vec3 = new Vec3(((double)this.rand.nextFloat() - 0.5D) * 0.1D, 1 * 0.1D + 0.1D, 0.0D);
             vec3 = vec3.rotatePitch(-this.rotationPitch * (float)Math.PI / 180.0F);
             vec3 = vec3.rotateYaw(-this.rotationYaw * (float)Math.PI / 180.0F);
             double d0 = (double)(-this.rand.nextFloat()) * 0.6D - 0.3D;
@@ -1339,8 +1334,8 @@ public abstract class EntityLivingBase extends Entity
         if (this.isSprinting())
         {
             float f = this.rotationYaw * 0.017453292F;
-            this.motionX -= (double)(Math.sin(f) * 0.2F);
-            this.motionZ += (double)(Math.cos(f) * 0.2F);
+            this.motionX -= (double)((float) Math.sin(f) * 0.2F);
+            this.motionZ += (double)((float) Math.cos(f) * 0.2F);
         }
 
         this.isAirBorne = true;
@@ -1881,10 +1876,6 @@ public abstract class EntityLivingBase extends Entity
         }
     }
 
-    public boolean canPosBeSeen(final Vec3 vec3) {
-        return this.worldObj.rayTraceBlocks(new Vec3(this.posX, this.posY + this.getEyeHeight(), this.posZ), vec3) == null;
-    }
-
     public boolean canEntityBeSeen(Entity entityIn)
     {
         return this.worldObj.rayTraceBlocks(new Vec3(this.posX, this.posY + (double)this.getEyeHeight(), this.posZ), new Vec3(entityIn.posX, entityIn.posY + (double)entityIn.getEyeHeight(), entityIn.posZ)) == null;
@@ -1895,13 +1886,8 @@ public abstract class EntityLivingBase extends Entity
         return this.getLook(1.0F);
     }
 
-    public Vec3 getLook(float partialTicks) {
-
-        if (this instanceof EntityPlayerSP) {
-            return super.getLook(partialTicks);
-
-        }
-
+    public Vec3 getLook(float partialTicks)
+    {
         if (partialTicks == 1.0F)
         {
             return this.getVectorForRotation(this.rotationPitch, this.rotationYawHead);
@@ -2003,10 +1989,4 @@ public abstract class EntityLivingBase extends Entity
     {
         this.potionsNeedUpdate = true;
     }
-
-    //back track stuff
-
-    public double realPosX;
-    public double realPosY;
-    public double realPosZ;
 }

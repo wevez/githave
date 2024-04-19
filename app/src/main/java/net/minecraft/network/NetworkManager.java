@@ -5,12 +5,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.connection.UserConnectionImpl;
 import com.viaversion.viaversion.protocol.ProtocolPipelineImpl;
-
 import de.florianmichael.vialoadingbase.ViaLoadingBase;
-import de.florianmichael.vialoadingbase.netty.event.CompressionReorderEvent;
 import de.florianmichael.viamcp.MCPVLBPipeline;
 import de.florianmichael.viamcp.ViaMCP;
-import githave.manager.rotation.RotationManager;
+import githave.GitHave;
+import githave.event.Events;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
@@ -41,8 +40,6 @@ import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
-
-import net.minecraft.network.play.server.S08PacketPlayerPosLook;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.CryptManager;
@@ -53,9 +50,6 @@ import net.minecraft.util.MessageDeserializer;
 import net.minecraft.util.MessageDeserializer2;
 import net.minecraft.util.MessageSerializer;
 import net.minecraft.util.MessageSerializer2;
-import githave.GitHave;
-import githave.event.Events;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.LogManager;
@@ -93,7 +87,7 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
     private final EnumPacketDirection direction;
     private final Queue<NetworkManager.InboundHandlerTuplePacketListener> outboundPacketsQueue = Queues.<NetworkManager.InboundHandlerTuplePacketListener>newConcurrentLinkedQueue();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    public Channel channel;
+    private Channel channel;
     private SocketAddress socketAddress;
     private INetHandler packetListener;
     private IChatComponent terminationReason;
@@ -174,13 +168,6 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         }
     }
 
-    public void setNetHandler(INetHandler handler)
-    {
-        Validate.notNull(handler, "packetListener", new Object[0]);
-        logger.debug("Set listener of {} to {}", new Object[] {this, handler});
-        this.packetListener = handler;
-    }
-
     public void sendPacketNoEvent(Packet packet)
     {
         if (channel != null && channel.isOpen())
@@ -194,20 +181,19 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
         }
     }
 
+    public void setNetHandler(INetHandler handler)
+    {
+        Validate.notNull(handler, "packetListener", new Object[0]);
+        logger.debug("Set listener of {} to {}", new Object[] {this, handler});
+        this.packetListener = handler;
+    }
+
     public void sendPacket(Packet packetIn)
     {
-        Events.SendPacket event = new Events.SendPacket(true, packetIn);
-        GitHave.INSTANCE.eventManager.call(event);
-
-        if (event.isCanceled())
-        {
-            return;
-        }
-
         if (this.isChannelOpen())
         {
             this.flushOutboundQueue();
-            this.dispatchPacket(event.packet, (GenericFutureListener <? extends Future <? super Void >> [])null);
+            this.dispatchPacket(packetIn, (GenericFutureListener <? extends Future <? super Void >> [])null);
         }
         else
         {
@@ -226,18 +212,10 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
 
     public void sendPacket(Packet packetIn, GenericFutureListener <? extends Future <? super Void >> listener, GenericFutureListener <? extends Future <? super Void >> ... listeners)
     {
-        Events.SendPacket event = new Events.SendPacket(true, packetIn);
-GitHave.INSTANCE.eventManager.call(event);
-
-        if (event.isCanceled())
-        {
-            return;
-        }
-
         if (this.isChannelOpen())
         {
             this.flushOutboundQueue();
-            this.dispatchPacket(event.packet, (GenericFutureListener[])ArrayUtils.add(listeners, 0, listener));
+            this.dispatchPacket(packetIn, (GenericFutureListener[])ArrayUtils.add(listeners, 0, listener));
         }
         else
         {
@@ -483,8 +461,6 @@ GitHave.INSTANCE.eventManager.call(event);
                 this.channel.pipeline().remove("compress");
             }
         }
-
-        this.channel.pipeline().fireUserEventTriggered(new CompressionReorderEvent());
     }
 
     public void checkDisconnected()

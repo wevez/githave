@@ -7,8 +7,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
-import githave.GitHave;
-import githave.event.Events;
 
 public class BlockAir extends Block
 {
@@ -26,12 +24,7 @@ public class BlockAir extends Block
 
     public AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state)
     {
-        Events.AirCollide event = new Events.AirCollide(worldIn, pos, state, minX, minY, minZ, maxX, maxY, maxZ);
-        GitHave.INSTANCE.eventManager.call(event);
-
-        if (event.isCanceled())return null;
-
-        return event.returnValue;
+        return null;
     }
 
     public boolean isOpaqueCube()

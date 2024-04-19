@@ -9,11 +9,11 @@ import net.minecraft.network.play.INetHandlerPlayClient;
 
 public class S08PacketPlayerPosLook implements Packet<INetHandlerPlayClient>
 {
-    public double x;
-    public double y;
-    public double z;
-    public float yaw;
-    public float pitch;
+    private double x;
+    private double y;
+    private double z;
+    private float yaw;
+    private float pitch;
     private Set<S08PacketPlayerPosLook.EnumFlags> field_179835_f;
 
     public S08PacketPlayerPosLook()

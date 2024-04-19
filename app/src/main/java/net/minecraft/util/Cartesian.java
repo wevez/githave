@@ -73,7 +73,7 @@ public class Cartesian
             if (iterables.length <= 0) {
                 return Collections.singletonList((T[])Cartesian.createArray(clazz, 0)).iterator();
             } else {
-             return new Cartesian.Product.ProductIterator(this.clazz, this.iterables);
+                return new Cartesian.Product.ProductIterator(this.clazz, this.iterables);
             }
         }
 

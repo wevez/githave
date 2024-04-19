@@ -12,16 +12,17 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.src.Config;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumWorldBlockLayer;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.optifine.entity.model.IEntityRenderer;
-import githave.GitHave;
-import githave.event.Events;
+import net.optifine.shaders.Shaders;
 import org.lwjgl.opengl.GL11;
 
 public abstract class Render<T extends Entity> implements IEntityRenderer
@@ -52,15 +53,11 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
 
     public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
-        Events.NametagRenderer event = new Events.NametagRenderer(entity);
-        GitHave.INSTANCE.eventManager.call(event);
-        if (event.isCanceled()) return;
         this.renderName(entity, x, y, z);
     }
 
     protected void renderName(T entity, double x, double y, double z)
     {
-        // TODO Nametags
         if (this.canRenderName(entity))
         {
             this.renderLivingLabel(entity, entity.getDisplayName().getFormattedText(), x, y, z, 64);
@@ -176,43 +173,43 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
 
     private void renderShadow(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)
     {
-        // TODO fps boost
-//        if (!Config.isShaders() || !Shaders.shouldSkipDefaultShadow)
-//        {
-//            GlStateManager.enableBlend();
-//            GlStateManager.blendFunc(770, 771);
-//            this.renderManager.renderEngine.bindTexture(shadowTextures);
-//            World world = this.getWorldFromRenderManager();
-//            GlStateManager.depthMask(false);
-//            float f = this.shadowSize;
-//
-//            if (entityIn instanceof EntityLiving)
-//            {
-//                EntityLiving entityliving = (EntityLiving)entityIn;
-//                f *= entityliving.getRenderSizeModifier();
-//
-//                if (entityliving.isChild())
-//                {
-//                    f *= 0.5F;
-//                }
-//            }
-//
-//            double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
-//            double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
-//            double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
-//            int i = MathHelper.floor_double(d5 - (double)f);
-//            int j = MathHelper.floor_double(d5 + (double)f);
-//            int k = MathHelper.floor_double(d0 - (double)f);
-//            int l = MathHelper.floor_double(d0);
-//            int i1 = MathHelper.floor_double(d1 - (double)f);
-//            int j1 = MathHelper.floor_double(d1 + (double)f);
-//            double d2 = x - d5;
-//            double d3 = y - d0;
-//            double d4 = z - d1;
-//            Tessellator tessellator = Tessellator.getInstance();
-//            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-//            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-//
+        if (!Config.isShaders() || !Shaders.shouldSkipDefaultShadow)
+        {
+            GlStateManager.enableBlend();
+            GlStateManager.blendFunc(770, 771);
+            this.renderManager.renderEngine.bindTexture(shadowTextures);
+            World world = this.getWorldFromRenderManager();
+            GlStateManager.depthMask(false);
+            float f = this.shadowSize;
+
+            if (entityIn instanceof EntityLiving)
+            {
+                EntityLiving entityliving = (EntityLiving)entityIn;
+                f *= entityliving.getRenderSizeModifier();
+
+                if (entityliving.isChild())
+                {
+                    f *= 0.5F;
+                }
+            }
+
+            double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
+            double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
+            double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
+            int i = MathHelper.floor_double(d5 - (double)f);
+            int j = MathHelper.floor_double(d5 + (double)f);
+            int k = MathHelper.floor_double(d0 - (double)f);
+            int l = MathHelper.floor_double(d0);
+            int i1 = MathHelper.floor_double(d1 - (double)f);
+            int j1 = MathHelper.floor_double(d1 + (double)f);
+            double d2 = x - d5;
+            double d3 = y - d0;
+            double d4 = z - d1;
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
+
+            // TODO: 影を描画しないことによるFPS Boost
 //            for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
 //            {
 //                Block block = world.getBlockState(blockpos.down()).getBlock();
@@ -222,12 +219,12 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
 //                    this.renderShadowBlock(block, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
 //                }
 //            }
-//
-//            tessellator.draw();
-//            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-//            GlStateManager.disableBlend();
-//            GlStateManager.depthMask(true);
-//        }
+
+            tessellator.draw();
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.disableBlend();
+            GlStateManager.depthMask(true);
+        }
     }
 
     private World getWorldFromRenderManager()
@@ -237,35 +234,34 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
 
     private void renderShadowBlock(Block blockIn, double p_180549_2_, double p_180549_4_, double p_180549_6_, BlockPos pos, float p_180549_9_, float p_180549_10_, double p_180549_11_, double p_180549_13_, double p_180549_15_)
     {
-        // TODO: fps boost
-//        if (blockIn.isFullCube())
-//        {
-//            Tessellator tessellator = Tessellator.getInstance();
-//            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-//            double d0 = ((double)p_180549_9_ - (p_180549_4_ - ((double)pos.getY() + p_180549_13_)) / 2.0D) * 0.5D * (double)this.getWorldFromRenderManager().getLightBrightness(pos);
-//
-//            if (d0 >= 0.0D)
-//            {
-//                if (d0 > 1.0D)
-//                {
-//                    d0 = 1.0D;
-//                }
-//
-//                double d1 = (double)pos.getX() + blockIn.getBlockBoundsMinX() + p_180549_11_;
-//                double d2 = (double)pos.getX() + blockIn.getBlockBoundsMaxX() + p_180549_11_;
-//                double d3 = (double)pos.getY() + blockIn.getBlockBoundsMinY() + p_180549_13_ + 0.015625D;
-//                double d4 = (double)pos.getZ() + blockIn.getBlockBoundsMinZ() + p_180549_15_;
-//                double d5 = (double)pos.getZ() + blockIn.getBlockBoundsMaxZ() + p_180549_15_;
-//                float f = (float)((p_180549_2_ - d1) / 2.0D / (double)p_180549_10_ + 0.5D);
-//                float f1 = (float)((p_180549_2_ - d2) / 2.0D / (double)p_180549_10_ + 0.5D);
-//                float f2 = (float)((p_180549_6_ - d4) / 2.0D / (double)p_180549_10_ + 0.5D);
-//                float f3 = (float)((p_180549_6_ - d5) / 2.0D / (double)p_180549_10_ + 0.5D);
-//                worldrenderer.pos(d1, d3, d4).tex((double)f, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
-//                worldrenderer.pos(d1, d3, d5).tex((double)f, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
-//                worldrenderer.pos(d2, d3, d5).tex((double)f1, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
-//                worldrenderer.pos(d2, d3, d4).tex((double)f1, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
-//            }
-//        }
+        if (blockIn.isFullCube())
+        {
+            Tessellator tessellator = Tessellator.getInstance();
+            WorldRenderer worldrenderer = tessellator.getWorldRenderer();
+            double d0 = ((double)p_180549_9_ - (p_180549_4_ - ((double)pos.getY() + p_180549_13_)) / 2.0D) * 0.5D * (double)this.getWorldFromRenderManager().getLightBrightness(pos);
+
+            if (d0 >= 0.0D)
+            {
+                if (d0 > 1.0D)
+                {
+                    d0 = 1.0D;
+                }
+
+                double d1 = (double)pos.getX() + blockIn.getBlockBoundsMinX() + p_180549_11_;
+                double d2 = (double)pos.getX() + blockIn.getBlockBoundsMaxX() + p_180549_11_;
+                double d3 = (double)pos.getY() + blockIn.getBlockBoundsMinY() + p_180549_13_ + 0.015625D;
+                double d4 = (double)pos.getZ() + blockIn.getBlockBoundsMinZ() + p_180549_15_;
+                double d5 = (double)pos.getZ() + blockIn.getBlockBoundsMaxZ() + p_180549_15_;
+                float f = (float)((p_180549_2_ - d1) / 2.0D / (double)p_180549_10_ + 0.5D);
+                float f1 = (float)((p_180549_2_ - d2) / 2.0D / (double)p_180549_10_ + 0.5D);
+                float f2 = (float)((p_180549_6_ - d4) / 2.0D / (double)p_180549_10_ + 0.5D);
+                float f3 = (float)((p_180549_6_ - d5) / 2.0D / (double)p_180549_10_ + 0.5D);
+                worldrenderer.pos(d1, d3, d4).tex((double)f, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+                worldrenderer.pos(d1, d3, d5).tex((double)f, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+                worldrenderer.pos(d2, d3, d5).tex((double)f1, (double)f3).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+                worldrenderer.pos(d2, d3, d4).tex((double)f1, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
+            }
+        }
     }
 
     public static void renderOffsetAABB(AxisAlignedBB boundingBox, double x, double y, double z)

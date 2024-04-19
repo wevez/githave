@@ -16,7 +16,7 @@ public class TimedEvent
 
             if (olong == null)
             {
-                olong = (i);
+                olong = i;
                 mapEventTimes.put(name, olong);
             }
 
@@ -28,7 +28,7 @@ public class TimedEvent
             }
             else
             {
-                mapEventTimes.put(name, (i));
+                mapEventTimes.put(name, i);
                 return true;
             }
         }

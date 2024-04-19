@@ -4,6 +4,9 @@ import com.google.common.collect.Sets;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import githave.GitHave;
+import githave.event.Events;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -39,8 +42,6 @@ import net.optifine.CustomGuis;
 import net.optifine.DynamicLights;
 import net.optifine.override.PlayerControllerOF;
 import net.optifine.reflect.Reflector;
-import githave.GitHave;
-import githave.event.Events;
 
 public class WorldClient extends World
 {
@@ -55,10 +56,7 @@ public class WorldClient extends World
     public WorldClient(NetHandlerPlayClient netHandler, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profilerIn)
     {
         super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), WorldProvider.getProviderForDimension(dimension), profilerIn, true);
-
-        Events.WorldChange event = new Events.WorldChange();
-        GitHave.INSTANCE.eventManager.call(event);
-
+        GitHave.INSTANCE.eventManager.call(new Events.WorldChange());
         this.sendQueue = netHandler;
         this.getWorldInfo().setDifficulty(difficulty);
         this.provider.registerWorld(this);

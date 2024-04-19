@@ -1273,7 +1273,7 @@ public class ConnectedParser
                 }
                 else
                 {
-                    set.add((j));
+                    set.add(j);
                 }
             }
         }
@@ -1300,7 +1300,7 @@ public class ConnectedParser
             }
             else
             {
-                set.add((j));
+                set.add(j);
             }
         }
 

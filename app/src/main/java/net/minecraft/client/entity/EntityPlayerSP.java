@@ -1,5 +1,7 @@
 package net.minecraft.client.entity;
 
+import githave.GitHave;
+import githave.event.Events;
 import githave.manager.rotation.RotationManager;
 import githave.util.RotationUtil;
 import net.minecraft.client.Minecraft;
@@ -47,21 +49,18 @@ import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.util.*;
 import net.minecraft.world.IInteractionObject;
 import net.minecraft.world.World;
-import githave.GitHave;
-import githave.event.Events;
 
 public class EntityPlayerSP extends AbstractClientPlayer
 {
-    public int reSprint;
     public final NetHandlerPlayClient sendQueue;
     private final StatFileWriter statWriter;
-    public double lastReportedPosX;
-    public double lastReportedPosY;
-    public double lastReportedPosZ;
+    private double lastReportedPosX;
+    private double lastReportedPosY;
+    private double lastReportedPosZ;
     private float lastReportedYaw;
     private float lastReportedPitch;
     private boolean serverSneakState;
-    public boolean serverSprintState;
+    private boolean serverSprintState;
     private int positionUpdateTicks;
     private boolean hasValidHealth;
     private String clientBrand;
@@ -77,6 +76,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
     private float horseJumpPower;
     public float timeInPortal;
     public float prevTimeInPortal;
+    public int reSprint;
 
     public EntityPlayerSP(Minecraft mcIn, World worldIn, NetHandlerPlayClient netHandler, StatFileWriter statFile)
     {
@@ -85,6 +85,22 @@ public class EntityPlayerSP extends AbstractClientPlayer
         this.statWriter = statFile;
         this.mc = mcIn;
         this.dimension = 0;
+    }
+
+    @Override
+    public void moveEntity(double x, double y, double z)
+    {
+        Events.Move event = new Events.Move(true, x, y, z);
+        GitHave.INSTANCE.eventManager.call(event);
+
+        if (event.isCanceled())
+        {
+            return;
+        }
+
+        super.moveEntity(event.x, event.y, event.z);
+        Events.Move event2 = new Events.Move(false, x, y, z);
+        GitHave.INSTANCE.eventManager.call(event2);
     }
 
     public boolean attackEntityFrom(DamageSource source, float amount)
@@ -106,27 +122,11 @@ public class EntityPlayerSP extends AbstractClientPlayer
         }
     }
 
-    @Override
-    public void moveEntity(double x, double y, double z)
-    {
-        Events.Move event = new Events.Move(true, x, y, z);
-        GitHave.INSTANCE.eventManager.call(event);
-
-        if (event.isCanceled())
-        {
-            return;
-        }
-
-        super.moveEntity(event.x, event.y, event.z);
-        Events.Move event2 = new Events.Move(false, x, y, z);
-        GitHave.INSTANCE.eventManager.call(event2);
-    }
-
     public void onUpdate()
     {
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0D, this.posZ)))
         {
-            GitHave.INSTANCE.eventManager.call(new Events.Update(false));
+            GitHave.INSTANCE.eventManager.call(new Events.Update(true));
             super.onUpdate();
 
             if (this.isRiding())
@@ -138,12 +138,10 @@ public class EntityPlayerSP extends AbstractClientPlayer
             {
                 this.onUpdateWalkingPlayer();
             }
+            GitHave.INSTANCE.eventManager.call(new Events.Update(false));
         }
     }
 
-    /**
-     * called every tick when the player is on foot. Performs all the things that normally happen during movement.
-     */
     public void onUpdateWalkingPlayer()
     {
         boolean flag = this.isSprinting();

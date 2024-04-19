@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
 
+import githave.GitHave;
+import githave.event.Events;
 import githave.manager.rotation.RotationManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
@@ -89,10 +91,6 @@ import net.optifine.shaders.ShadersRender;
 import net.optifine.util.MemoryMonitor;
 import net.optifine.util.TextureUtils;
 import net.optifine.util.TimedEvent;
-import githave.GitHave;
-import githave.event.Events;
-import githave.gui.click.ClickGui;
-import githave.util.render.BlurUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
@@ -135,6 +133,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
     private boolean renderHand = true;
     private boolean drawBlockOutline = true;
     private long prevFrameTime = Minecraft.getSystemTime();
+    private long renderEndNanoTime;
     private final DynamicTexture lightmapTexture;
     private final int[] lightmapColors;
     private final ResourceLocation locationLightMap;
@@ -153,6 +152,8 @@ public class EntityRenderer implements IResourceManagerReloadListener
     private int debugViewDirection = 0;
     private boolean debugView = false;
     private double cameraZoom = 1.0D;
+    private double cameraYaw;
+    private double cameraPitch;
     private ShaderGroup theShaderGroup;
     private static final ResourceLocation[] shaderResourceLocations = new ResourceLocation[] {new ResourceLocation("shaders/post/notch.json"), new ResourceLocation("shaders/post/fxaa.json"), new ResourceLocation("shaders/post/art.json"), new ResourceLocation("shaders/post/bumpy.json"), new ResourceLocation("shaders/post/blobs2.json"), new ResourceLocation("shaders/post/pencil.json"), new ResourceLocation("shaders/post/color_convolve.json"), new ResourceLocation("shaders/post/deconverge.json"), new ResourceLocation("shaders/post/flip.json"), new ResourceLocation("shaders/post/invert.json"), new ResourceLocation("shaders/post/ntsc.json"), new ResourceLocation("shaders/post/outline.json"), new ResourceLocation("shaders/post/phosphor.json"), new ResourceLocation("shaders/post/scan_pincushion.json"), new ResourceLocation("shaders/post/sobel.json"), new ResourceLocation("shaders/post/bits.json"), new ResourceLocation("shaders/post/desaturate.json"), new ResourceLocation("shaders/post/green.json"), new ResourceLocation("shaders/post/blur.json"), new ResourceLocation("shaders/post/wobble.json"), new ResourceLocation("shaders/post/blobs.json"), new ResourceLocation("shaders/post/antialias.json"), new ResourceLocation("shaders/post/creeper.json"), new ResourceLocation("shaders/post/spider.json")};
     public static final int shaderCount = shaderResourceLocations.length;
@@ -161,14 +162,17 @@ public class EntityRenderer implements IResourceManagerReloadListener
     public int frameCount;
     private boolean initialized = false;
     private World updatedWorld = null;
+    private boolean showDebugInfo = false;
     public boolean fogStandard = false;
     private float clipDistance = 128.0F;
     private long lastServerTime = 0L;
     private int lastServerTicks = 0;
     private int serverWaitTime = 0;
+    private int serverWaitTimeCurrent = 0;
+    private float avgServerTimeDiff = 0.0F;
+    private float avgServerTickDiff = 0.0F;
     private ShaderGroup[] fxaaShaders = new ShaderGroup[10];
     private boolean loadVisibleChunks = false;
-    private long renderEndNanoTime;
 
     public EntityRenderer(Minecraft mcIn, IResourceManager resourceManagerIn)
     {
@@ -247,8 +251,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
             }
         }
     }
-
-    public float cameraYaw, cameraPitch;
 
     public void activateNextShader()
     {
@@ -413,9 +415,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
             double d1 = d0;
             Vec3 vec3 = entity.getPositionEyes(partialTicks);
             boolean flag = false;
-            Events.Reach event = new Events.Reach(3);
-            GitHave.INSTANCE.eventManager.call(event);
-            double i = event.reach;
+            int i = 3;
 
             if (this.mc.playerController.extendedReach())
             {
@@ -493,7 +493,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 }
             }
 
-            if (this.pointedEntity != null && flag && vec3.distanceTo(vec33) > event.reach)
+            if (this.pointedEntity != null && flag && vec3.distanceTo(vec33) > 3.0D)
             {
                 this.pointedEntity = null;
                 this.mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec33, (EnumFacing)null, new BlockPos(vec33));
@@ -609,8 +609,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
 
     private void hurtCameraEffect(float partialTicks)
     {
-        // TODO NoHurtCam
-
         if (this.mc.getRenderViewEntity() instanceof EntityLivingBase)
         {
             EntityLivingBase entitylivingbase = (EntityLivingBase)this.mc.getRenderViewEntity();
@@ -765,6 +763,8 @@ public class EntityRenderer implements IResourceManagerReloadListener
         d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
         this.cloudFog = this.mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
     }
+
+    private final Events.Render3D render3DEvent = new Events.Render3D();
 
     public void setupCameraTransform(float partialTicks, int pass)
     {
@@ -1251,20 +1251,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
                 if (!this.mc.gameSettings.hideGUI || this.mc.currentScreen != null)
                 {
                     GlStateManager.alphaFunc(516, 0.1F);
-
                     this.mc.ingameGUI.renderGameOverlay(partialTicks);
-                    if (mc.currentScreen instanceof ClickGui) {
-                        GitHave.INSTANCE.clickGui.a();
-                    }
-
-                    GitHave.INSTANCE.eventManager.call(renderGui);
-                    if (!mc.gameSettings.ofFastRender) {
-                        BlurUtil.blur();
-                    }
-                    GitHave.INSTANCE.eventManager.call(postRenderGui);
-                    if (mc.currentScreen instanceof ClickGui) {
-                        GitHave.INSTANCE.clickGui.onPost();
-                    }
 
                     if (this.mc.gameSettings.ofShowFps && !this.mc.gameSettings.showDebugInfo)
                     {
@@ -1347,9 +1334,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.mc.gameSettings.showDebugProfilerChart = true;
         }
     }
-
-    private final Events.PreRenderGui renderGui = new Events.PreRenderGui();
-    private final Events.PostRenderGui postRenderGui = new Events.PostRenderGui();
 
     public void renderStreamIndicator(float partialTicks)
     {
@@ -1807,10 +1791,7 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.mc.mcProfiler.endStartSection("forge_render_last");
             Reflector.callVoid(Reflector.ForgeHooksClient_dispatchRenderLast, new Object[] {renderglobal, Float.valueOf(partialTicks)});
         }
-
         GitHave.INSTANCE.eventManager.call(render3DEvent);
-        GL11.glColor4d(1.0, 1.0, 1.0, 1.0);
-
         this.mc.mcProfiler.endStartSection("hand");
 
         if (this.renderHand && !Shaders.isShadowPass)
@@ -1840,8 +1821,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
             Shaders.endRender();
         }
     }
-
-    private final Events.Render3D render3DEvent = new Events.Render3D();
 
     private void renderCloudsCheck(RenderGlobal renderGlobalIn, float partialTicks, int pass)
     {
@@ -2137,7 +2116,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
         float f3 = (float)vec3.zCoord;
         Vec3 vec31 = world.getFogColor(partialTicks);
         vec31 = CustomColors.getWorldFogColor(vec31, world, this.mc.getRenderViewEntity(), partialTicks);
-        // TODO: SkyColor
         this.fogColorRed = (float)vec31.xCoord;
         this.fogColorGreen = (float)vec31.yCoord;
         this.fogColorBlue = (float)vec31.zCoord;
@@ -2464,8 +2442,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
         return this.fogColorBuffer;
     }
 
-    public int serverWaitTimeCurrent;
-
     public MapItemRenderer getMapItemRenderer()
     {
         return this.theMapItemRenderer;
@@ -2559,8 +2535,6 @@ public class EntityRenderer implements IResourceManagerReloadListener
             this.lastServerTicks = 0;
         }
     }
-
-    public float avgServerTickDiff, avgServerTimeDiff;
 
     private void frameInit()
     {
