@@ -168,23 +168,15 @@ public class KillAura extends Module {
         AxisAlignedBB ex = bb.expand(0.1, 0.1, 0.1);
 //        if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch }) == target) {
         if (RotationUtil.isIn(RotationUtil.rotation(ex.minX, ex.minY, ex.minZ)[0], RotationUtil.rotation(ex.maxX, ex.maxY, ex.maxZ)[0], mc.thePlayer.rotationYaw)) {
-            if (System.currentTimeMillis() > next) {
-                int ra = RandomUtil.nextInt(250, 500);
-                final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, -0.1, 0), eye);
-                if (Math.hypot(MathHelper.wrapAngleTo180_float(
+            if (mc.thePlayer.getNearestDistanceToEntity(target) > target.width && System.currentTimeMillis() > next) {
+                final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, 0, 0), eye);
+                next = System.currentTimeMillis() + RandomUtil.nextInt(50);
+                aYaw = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
                         center[0] - mc.thePlayer.rotationYaw
-                ), MathHelper.wrapAngleTo180_float(
+                );
+                aPitch = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
                         center[1] - mc.thePlayer.rotationPitch
-                )) < 10) {
-                    return new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch };
-                }
-                next = System.currentTimeMillis() + ra;
-                aYaw = RandomUtil.nextFloat(0.9f, 1.1f) * MathHelper.wrapAngleTo180_float(
-                        center[0] - mc.thePlayer.rotationYaw
-                ) / ra * 10;
-                aPitch = RandomUtil.nextFloat(0.9f, 1.1f) * MathHelper.wrapAngleTo180_float(
-                        center[1] - mc.thePlayer.rotationPitch
-                ) / ra * 10;
+                );
             }
             float[] r = { mc.thePlayer.rotationYaw + aYaw * RandomUtil.nextFloat(1),
                     mc.thePlayer.rotationPitch + aPitch * RandomUtil.nextFloat(1) };

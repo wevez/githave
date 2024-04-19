@@ -10,7 +10,7 @@ public class EventManager {
 
     public EventManager() {
         super();
-        this.LISTENER_REGISTRY = Lists.newArrayList();
+        this.LISTENER_REGISTRY = Lists.newCopyOnWriteArrayList();
     }
 
     public void call(final EventArgument argument) {
