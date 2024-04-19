@@ -65,6 +65,31 @@ public class C03PacketPlayer implements Packet<INetHandlerPlayServer>
         return this.pitch;
     }
 
+    public double getPositionX(double defaultValue)
+    {
+        return this.moving ? this.x : defaultValue;
+    }
+
+    public double getPositionY(double defaultValue)
+    {
+        return this.moving ? this.y : defaultValue;
+    }
+
+    public double getPositionZ(double defaultValue)
+    {
+        return this.moving ? this.z : defaultValue;
+    }
+
+    public float getYaw(float defaultValue)
+    {
+        return this.rotating ? this.yaw : defaultValue;
+    }
+
+    public float getPitch(float defaultValue)
+    {
+        return this.rotating ? this.pitch : defaultValue;
+    }
+
     public boolean isOnGround()
     {
         return this.onGround;

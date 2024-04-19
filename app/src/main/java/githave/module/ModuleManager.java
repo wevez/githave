@@ -2,6 +2,7 @@ package githave.module;
 
 import githave.module.impl.combat.*;
 import githave.module.impl.player.AutoSprint;
+import githave.module.impl.player.Blink;
 import githave.module.impl.player.ChestStealer;
 import githave.module.impl.render.Animations;
 import githave.module.impl.render.HUD;
@@ -26,6 +27,7 @@ public class ModuleManager {
             new ModuleList(),
             new Animations(),
             new HUD(),
+            new Blink(),
             new AutoSprint(),
             new ChestStealer()
     );
