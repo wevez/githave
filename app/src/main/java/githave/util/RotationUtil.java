@@ -55,6 +55,20 @@ public class RotationUtil implements MCHook {
         );
     }
 
+    public static float distSq(float[] a, float[] b) {
+        float y = MathHelper.wrapAngleTo180_float(a[0] - b[0]);
+        float p = MathHelper.wrapAngleTo180_float(a[1] - b[1]);
+        return y * y + p * p;
+    }
+
+    public static float distSq(float[] a) {
+        return distSq(a, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
+    }
+
+    public static float dist(float a, float b) {
+        return Math.abs(MathHelper.wrapAngleTo180_float(a - b));
+    }
+
     public static float normalize(float a) {
         a %= 360;
         if (a < 0) a+= 360;

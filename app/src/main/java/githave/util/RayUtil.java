@@ -2,7 +2,6 @@ package githave.util;
 
 import com.google.common.base.Predicates;
 import githave.MCHook;
-import githave.util.data.BlockData;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.EntitySelectors;
@@ -12,9 +11,9 @@ import net.optifine.reflect.Reflector;
 
 import java.util.List;
 
-public class RayCastUtil implements MCHook {
+public class RayUtil implements MCHook {
 
-    public static Vec3 getVectorForRotation(float pitch, float yaw) {
+    private static Vec3 getVectorForRotation(float pitch, float yaw) {
         float f = (float) Math.cos(-yaw * 0.017453292F - (float)Math.PI);
         float f1 = (float) Math.sin(-yaw * 0.017453292F - (float)Math.PI);
         float f2 = (float) -Math.cos(-pitch * 0.017453292F);
@@ -22,7 +21,7 @@ public class RayCastUtil implements MCHook {
         return new Vec3((f1 * f2), f3, (f * f2));
     }
 
-    public static Entity rayTrace(double range, float[] rotations) {
+    public static Entity rayEntity(double range, float[] rotations) {
         if (range == 3) {
             return mc.objectMouseOver.entityHit;
         }

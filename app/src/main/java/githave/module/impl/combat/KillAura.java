@@ -1,7 +1,9 @@
 package githave.module.impl.combat;
 
 import githave.event.Events;
+import githave.manager.rotation.RotationManager;
 import githave.util.*;
+import githave.util.bypass.BypassRotation;
 import githave.util.bypass.IndependentCPS;
 import net.minecraft.entity.EntityLivingBase;
 import githave.module.Module;
@@ -15,6 +17,7 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.lwjgl.input.Keyboard;
 
@@ -130,7 +133,11 @@ public class KillAura extends Module {
         if (target == null) return;
         if (cpsTimer.onTick()) {
             mc.clickMouse();
+//            System.out.println("Yes");
+        } else {
+//            System.out.println("No");
         }
+        System.out.println(target.getHealth() + target.getAbsorptionAmount());
         super.onTick(event);
     }
 
@@ -143,8 +150,12 @@ public class KillAura extends Module {
         }
         block();
         float[] rot = calcRotation();
-        event.yaw = rot[0];
-        event.pitch = rot[1];
+        if (rot != null) {
+            event.yaw = rot[0];
+            event.pitch = rot[1];
+//            RotationManager.virtualPrevYaw = RotationManager.virtualYaw = event.yaw = rot[0];
+//            RotationManager.virtualPitch = RotationManager.virtualPrevPitch = event.pitch = rot[1];
+        }
         super.onRotation(event);
     }
 
@@ -153,56 +164,34 @@ public class KillAura extends Module {
         super.onRender3D(event);
     }
 
-
-    // For rotation bypasses
-    private float aYaw, aPitch;
-    private long next;
-
     private float[] calcRotation() {
-        Vec3 eye = mc.thePlayer.getPositionEyes(1f);
-        AxisAlignedBB bb = target.getEntityBoundingBox();
-        Vec3 nearest = AlgebraUtil.nearest(bb, eye);
-        if (mc.thePlayer.getNearestDistanceToEntity(target) == 0) {
-            return new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch };
-        }
-        AxisAlignedBB ex = bb.expand(0.1, 0.1, 0.1);
-//        if (RayCastUtil.rayTrace(attackRange.getValue() + 1, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch }) == target) {
-        if (RotationUtil.isIn(RotationUtil.rotation(ex.minX, ex.minY, ex.minZ)[0], RotationUtil.rotation(ex.maxX, ex.maxY, ex.maxZ)[0], mc.thePlayer.rotationYaw)) {
-            if (mc.thePlayer.getNearestDistanceToEntity(target) > target.width && System.currentTimeMillis() > next) {
-                final float[] center = RotationUtil.rotation(target.getPositionEyes(1f).addVector(0, 0, 0), eye);
-                next = System.currentTimeMillis() + RandomUtil.nextInt(50);
-                aYaw = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
-                        center[0] - mc.thePlayer.rotationYaw
-                );
-                aPitch = RandomUtil.nextFloat(0.3f) * MathHelper.wrapAngleTo180_float(
-                        center[1] - mc.thePlayer.rotationPitch
-                );
-            }
-            float[] r = { mc.thePlayer.rotationYaw + aYaw * RandomUtil.nextFloat(1),
-                    mc.thePlayer.rotationPitch + aPitch * RandomUtil.nextFloat(1) };
-            r = RotationUtil.getFixedRotation(r, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
-            return r;
-        }
-        float[] z = RotationUtil.rotation(nearest.addVector(
-                RandomUtil.nextDouble(-0.1f, 0.1),
-                RandomUtil.nextDouble(-0.1f, 0.1),
-                RandomUtil.nextDouble(-0.1f, 0.1)
-        ), eye);
-        z[0] = RotationUtil.smoothRot(mc.thePlayer.rotationYaw, z[0], RandomUtil.nextFloat(25f, 30) * RandomUtil.nextFloat(
-                (float) this.minYawSpeed.getValue(), (float) this.maxYawSpeed.getValue()
-        ) / 180f);
-        z[1] = RotationUtil.smoothRot(mc.thePlayer.rotationPitch, z[1], RandomUtil.nextFloat(25f, 30) * RandomUtil.nextFloat(
-                (float) this.minYawSpeed.getValue(), (float) this.maxYawSpeed.getValue()
-        ) / 180f);
-        {
-            float diff = MathHelper.wrapAngleTo180_float(z[0] - mc.thePlayer.rotationYaw);
-//            z[0] += diff * RandomUtil.nextFloat(1.25f, 1.5f);
-        }
-        z[1] += (float) (Math.sin(MathHelper.wrapAngleTo180_double(mc.thePlayer.rotationYaw - z[0]) / 5) * 5);
-        z = RotationUtil.getFixedRotation(z, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch });
-//        mc.thePlayer.rotationYaw = rots[0];
-//        mc.thePlayer.rotationPitch = rots[1];
-        return z;
+        final AxisAlignedBB box = target.getEntityBoundingBox().expand(-0.02, -0.25, -0.02);
+        Vec3 eye = mc.thePlayer.getPositionEyes(1).addVector(0, -Math.abs(mc.thePlayer.motionY) * 0.1, 0);
+        Vec3 center = null;
+        // mc.theWorld.rayTraceBlocks(eye, center, false).typeOfHitがNullPointerException起きる
+//        float min = 0;
+//        float[] f = RotationUtil.rotation(AlgebraUtil.nearest(box));
+//        for (double x = box.minX; x <= box.maxX; x += 0.1) {
+//            for (double y = box.minY; y <= box.maxY; y += 0.1) {
+//                for (double z = box.minZ; z <= box.maxZ; z += 0.1) {
+//                    if (mc.thePlayer.getDistanceSq(x, y, z) > 3) continue;;
+//                    float current = RotationUtil.distSq(f, RotationUtil.rotation(x, y, z));
+//                    if (current <= min) continue;
+////                    if (mc.theWorld.rayTraceBlocks(eye, center, false).typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) continue;
+//                    min = current;
+//                    center = new Vec3(x, y, z);
+//                }
+//            }
+//        }
+        if (center == null) center = box.center();
+        float[] rotation = RotationUtil.rotation(center);
+
+        return BypassRotation.getInstance().limitAngle(
+                new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch },
+                rotation,
+                center,
+                target
+        );
     }
 
     private void unblock() {

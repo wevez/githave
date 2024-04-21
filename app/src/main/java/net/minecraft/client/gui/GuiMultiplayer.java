@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import de.florianmichael.viamcp.ViaMCP;
+import githave.util.RandomUtil;
 import me.ksyz.accountmanager.gui.GuiAccountManager;
 import net.minecraft.client.multiplayer.GuiConnecting;
 import net.minecraft.client.multiplayer.ServerData;
@@ -13,6 +14,7 @@ import net.minecraft.client.multiplayer.ServerList;
 import net.minecraft.client.network.LanServerDetector;
 import net.minecraft.client.network.OldServerPinger;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.Session;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
@@ -86,6 +88,9 @@ public class GuiMultiplayer extends GuiScreen implements GuiYesNoCallback
         buttonList.add(new GuiButton(
                 69, width - 106, 6, 100, 20, "Accounts"
         ));
+        buttonList.add(new GuiButton(
+                114514, width - 106, 12 + 20, 100, 20, "Random Cracked"
+        ));
         this.buttonList.add(ViaMCP.INSTANCE.getAsyncVersionSlider());
 
         this.buttonList.add(this.btnEditServer = new GuiButton(7, this.width / 2 - 154, this.height - 28, 70, 20, I18n.format("selectServer.edit", new Object[0])));
@@ -131,6 +136,10 @@ public class GuiMultiplayer extends GuiScreen implements GuiYesNoCallback
         {
             if (button.id == 69) {
                 mc.displayGuiScreen(new GuiAccountManager(this));
+                return;
+            } else if (button.id == 114514) {
+
+                mc.session = new Session(RandomUtil.nextString(10), "", "", "");
                 return;
             }
 

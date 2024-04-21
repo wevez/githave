@@ -3,30 +3,47 @@ package githave.util.bypass;
 import githave.module.setting.impl.DoubleSetting;
 import githave.util.RandomUtil;
 import githave.util.TimerUtil;
+import net.minecraft.util.MathHelper;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 public class IndependentCPS {
 
-    private final TimerUtil clickCheckTimer = new TimerUtil();
-    private int clicksIn;
-
     private final DoubleSetting minCPS, maxCPS;
+
+    private int lastTotalClicks = -1;
+    private int[] lastClickArray;
+
+    private int index;
 
     public IndependentCPS(DoubleSetting minCPS, DoubleSetting maxCPS) {
         this.minCPS = minCPS;
         this.maxCPS = maxCPS;
+        updateClickArray();
     }
 
     public boolean onTick() {
-        if (clickCheckTimer.hasTimeElapsed(1000)) {
-            clickCheckTimer.reset();
-            clicksIn = 0;
+        if (index >= lastClickArray.length) {
+            index = 0;
+            updateClickArray();
         }
-        if (clicksIn >= maxCPS.getValue()) return false;
-        double centerCPS = this.minCPS.getValue() + (this.maxCPS.getValue() - this.minCPS.getValue()) / 2;
-        if (RandomUtil.percent((int) (100 * centerCPS / 20))) {
-            clicksIn++;
-            return true;
+        return lastClickArray[index++] > 0;
+    }
+
+    private void updateClickArray() {
+        int clicksBefore = lastTotalClicks == -1 ? (int) RandomUtil.nextDouble(minCPS.getValue(), maxCPS.getValue()) : lastTotalClicks;
+        int limit = RandomUtil.nextInt(0, 2);
+        int clicks = MathHelper.clamp_int((int) RandomUtil.nextDouble(minCPS.getValue(), maxCPS.getValue()), clicksBefore- limit, clicksBefore + limit);
+        int[] clickArray = new int[20];
+        double distance = Math.max(1, clickArray.length / (double) clicks);
+        int remainingClicks = clicks;
+        double currentIndex = 0;
+        while (remainingClicks > 0) {
+            clickArray[(int) currentIndex % clickArray.length]++;
+            currentIndex += distance;
+            remainingClicks--;
         }
-        return false;
+        lastTotalClicks = clicks;
+        lastClickArray = clickArray;
     }
 }
