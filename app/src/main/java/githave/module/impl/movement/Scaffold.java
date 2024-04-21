@@ -1,15 +1,19 @@
 package githave.module.impl.movement;
 
 import githave.event.Events;
+import githave.manager.rotation.RotationManager;
 import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.module.setting.impl.DoubleSetting;
+import githave.util.bypass.BypassRotation;
 import githave.util.bypass.IndependentCPS;
 import githave.util.data.BlockData;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import org.lwjgl.input.Keyboard;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -53,6 +57,10 @@ public class Scaffold extends Module {
 
     public Scaffold() {
         super("Scaffold", "Place blocks at your feet", ModuleCategory.Movement);
+        this.getSettingList().addAll(Arrays.asList(
+                minCPS,
+                maxCPS
+        ));
     }
 
     @Override
@@ -63,8 +71,30 @@ public class Scaffold extends Module {
 
     @Override
     protected void onDisable() {
+        this.setKeyCode(Keyboard.KEY_C);
         data.clear();
         super.onDisable();
+    }
+
+    @Override
+    public void onMoveButton(Events.MoveButton event) {
+        if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX + mc.thePlayer.motionX, mc.thePlayer.posY - 1, mc.thePlayer.posZ + mc.thePlayer.motionZ)).getBlock() == Blocks.air) {
+            if (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || mc.objectMouseOver.sideHit == EnumFacing.UP) {
+                event.sneak = true;
+            }
+        }
+        event.moveFix = true;
+
+        super.onMoveButton(event);
+    }
+
+    private float[] calcRotationStd() {
+        float yaw = RotationManager.virtualYaw + 180f;
+        yaw = 46 + Math.round(yaw / 45) * 45;
+        return new float[] {
+                yaw,
+                80f
+        };
     }
 
     @Override
@@ -73,11 +103,27 @@ public class Scaffold extends Module {
             lastDataUpdateTicks = mc.thePlayer.ticksExisted;
             data = getBlockData();
         }
+//        if (data.isEmpty()) return;
+        float[] rotation = calcRotationStd();
+        rotation = BypassRotation.getInstance().limitAngle(
+                new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
+                rotation,
+                mc.thePlayer.getPositionVector(),
+                mc.thePlayer
+                );
+        if (rotation != null) {
+            event.yaw = rotation[0];
+            event.pitch = rotation[1];
+        }
         super.onRotation(event);
     }
 
     @Override
     public void onTick(Events.Tick event) {
+        if (data.isEmpty()) return;
+        if (independentCPS.onTick()) {
+            mc.rightClickMouse();
+        }
         super.onTick(event);
     }
 

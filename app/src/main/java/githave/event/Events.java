@@ -212,12 +212,7 @@ public class Events {
 
     public static class MoveButton extends EventArgument {
 
-        public boolean left;
-        public boolean right;
-        public boolean backward;
-        public boolean forward;
-        public boolean sneak;
-        public boolean jump;
+        public boolean left,  right, backward, forward, sneak, jump, moveFix = false;
 
         public MoveButton(boolean button, boolean button2, boolean button3, boolean button4, boolean sneak, boolean jump) {
             this.left = button;
