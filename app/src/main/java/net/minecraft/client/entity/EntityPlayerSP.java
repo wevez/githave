@@ -2,6 +2,7 @@ package net.minecraft.client.entity;
 
 import githave.GitHave;
 import githave.event.Events;
+import githave.manager.rotation.PositionManager;
 import githave.manager.rotation.RotationManager;
 import githave.util.RotationUtil;
 import net.minecraft.client.Minecraft;
@@ -127,6 +128,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0D, this.posZ)))
         {
             GitHave.INSTANCE.eventManager.call(new Events.Update(true));
+            PositionManager.updatePositions();
             super.onUpdate();
 
             if (this.isRiding())

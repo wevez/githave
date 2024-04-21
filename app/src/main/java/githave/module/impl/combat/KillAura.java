@@ -82,24 +82,24 @@ public class KillAura extends Module {
     private final ModeSetting rotationMode = new ModeSetting.Builder("Rotation Mode", "Test", "Nearest")
             .build();
 
-    private final DoubleSetting minYawSpeed = new DoubleSetting.Builder("Min Yaw Speed", 50, 0, 180, 1)
-            .build();
-
-    private final DoubleSetting maxYawSpeed = new DoubleSetting.Builder("Max Yaw Speed", 180, 0, 180, 1)
-            .build();
-
-    private final DoubleSetting minPitchSpeed = new DoubleSetting.Builder("Min Pitch Speed", 50, 0, 180, 1)
-            .build();
-
-    private final DoubleSetting maxPitchSpeed = new DoubleSetting.Builder("Max Pitch Speed", 180, 0, 180, 1)
-            .build();
+//    private final DoubleSetting minYawSpeed = new DoubleSetting.Builder("Min Yaw Speed", 50, 0, 180, 1)
+//            .build();
+//
+//    private final DoubleSetting maxYawSpeed = new DoubleSetting.Builder("Max Yaw Speed", 180, 0, 180, 1)
+//            .build();
+//
+//    private final DoubleSetting minPitchSpeed = new DoubleSetting.Builder("Min Pitch Speed", 50, 0, 180, 1)
+//            .build();
+//
+//    private final DoubleSetting maxPitchSpeed = new DoubleSetting.Builder("Max Pitch Speed", 180, 0, 180, 1)
+//            .build();
 
     public KillAura() {
         super("KillAura", "Attacks entities around you", ModuleCategory.Combat);
         this.setKeyCode(Keyboard.KEY_R);
         this.getSettingList().addAll(Arrays.asList(
            targetMode, targets, teams, sortMode, blockMode, aimRange, attackRange, blockRange, clickMode, minCPS, maxCPS,
-                rotationMode, minYawSpeed, maxYawSpeed, minPitchSpeed, maxPitchSpeed
+                rotationMode//, minYawSpeed, maxYawSpeed, minPitchSpeed, maxPitchSpeed
         ));
     }
 
@@ -133,11 +133,7 @@ public class KillAura extends Module {
         if (target == null) return;
         if (cpsTimer.onTick()) {
             mc.clickMouse();
-//            System.out.println("Yes");
-        } else {
-//            System.out.println("No");
         }
-        System.out.println(target.getHealth() + target.getAbsorptionAmount());
         super.onTick(event);
     }
 
@@ -149,7 +145,15 @@ public class KillAura extends Module {
             return;
         }
         block();
-        float[] rot = calcRotation();
+        float[] rot = null;
+        switch (rotationMode.getValue()) {
+            case "Test":
+                rot = calcRotationLegit();
+                break;
+            case "Nearest":
+                rot = calcRotationNearest();
+                break;
+        }
         if (rot != null) {
             event.yaw = rot[0];
             event.pitch = rot[1];
@@ -164,26 +168,29 @@ public class KillAura extends Module {
         super.onRender3D(event);
     }
 
-    private float[] calcRotation() {
+    private float[] calcRotationNearest() {
+        return null;
+    }
+
+    private float[] calcRotationLegit() {
         final AxisAlignedBB box = target.getEntityBoundingBox().expand(-0.02, -0.25, -0.02);
-        Vec3 eye = mc.thePlayer.getPositionEyes(1).addVector(0, -Math.abs(mc.thePlayer.motionY) * 0.1, 0);
         Vec3 center = null;
         // mc.theWorld.rayTraceBlocks(eye, center, false).typeOfHitがNullPointerException起きる
-//        float min = 0;
-//        float[] f = RotationUtil.rotation(AlgebraUtil.nearest(box));
-//        for (double x = box.minX; x <= box.maxX; x += 0.1) {
-//            for (double y = box.minY; y <= box.maxY; y += 0.1) {
-//                for (double z = box.minZ; z <= box.maxZ; z += 0.1) {
-//                    if (mc.thePlayer.getDistanceSq(x, y, z) > 3) continue;;
-//                    float current = RotationUtil.distSq(f, RotationUtil.rotation(x, y, z));
-//                    if (current <= min) continue;
-////                    if (mc.theWorld.rayTraceBlocks(eye, center, false).typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) continue;
-//                    min = current;
-//                    center = new Vec3(x, y, z);
-//                }
-//            }
-//        }
-        if (center == null) center = box.center();
+        float min = 0;
+        float[] f = RotationUtil.rotation(AlgebraUtil.nearest(box));
+        for (double x = box.minX; x <= box.maxX; x += 0.1) {
+            for (double y = box.minY; y <= box.maxY; y += 0.1) {
+                for (double z = box.minZ; z <= box.maxZ; z += 0.1) {
+                    if (mc.thePlayer.getDistanceSq(x, y, z) > 3) continue;;
+                    float current = (float) mc.thePlayer.getDistanceSq(x, y, z);//RotationUtil.distSq(f, RotationUtil.rotation(x, y, z));
+                    if (current <= min) continue;
+//                    if (mc.theWorld.rayTraceBlocks(eye, center, false).typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) continue;
+                    min = current;
+                    center = new Vec3(x, y, z);
+                }
+            }
+        }
+        if (center == null) center = AlgebraUtil.nearest(box);
         float[] rotation = RotationUtil.rotation(center);
 
         return BypassRotation.getInstance().limitAngle(

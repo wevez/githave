@@ -2,6 +2,10 @@ package net.minecraft.util;
 
 public class Vec3
 {
+    public boolean is(Vec3 vec) {
+        return this.xCoord == vec.xCoord && this.yCoord == vec.yCoord && this.zCoord == vec.zCoord;
+    }
+
     public final double xCoord;
     public final double yCoord;
     public final double zCoord;

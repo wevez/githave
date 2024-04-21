@@ -209,7 +209,7 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
             WorldRenderer worldrenderer = tessellator.getWorldRenderer();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            // TODO: 影を描画しないことによるFPS Boost
+            // TODO:
 //            for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
 //            {
 //                Block block = world.getBlockState(blockpos.down()).getBlock();
