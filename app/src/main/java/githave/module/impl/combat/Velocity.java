@@ -76,11 +76,10 @@ public class Velocity extends ModeModule {
         }
 
         @Override
-        public void onMoveButton(Events.MoveButton event) {
+        public void onMovementInput(Events.MovementInput event) {
             if(mc.thePlayer.hurtTime > 0 && mc.objectMouseOver.entityHit != null) {
-                event.forward = true;
+                event.input.moveForward = 1;
             }
-            super.onMoveButton(event);
         }
 
         @Override

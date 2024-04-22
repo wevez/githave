@@ -13,7 +13,7 @@ import java.util.List;
 
 public class RayUtil implements MCHook {
 
-    private static Vec3 getVectorForRotation(float pitch, float yaw) {
+    public static Vec3 getVectorForRotation(float pitch, float yaw) {
         float f = (float) Math.cos(-yaw * 0.017453292F - (float)Math.PI);
         float f1 = (float) Math.sin(-yaw * 0.017453292F - (float)Math.PI);
         float f2 = (float) -Math.cos(-pitch * 0.017453292F);
@@ -22,10 +22,6 @@ public class RayUtil implements MCHook {
     }
 
     public static Entity rayEntity(double range, float[] rotations) {
-        if (range == 3) {
-            return mc.objectMouseOver.entityHit;
-        }
-
         Vec3 vec3 = mc.thePlayer.getPositionEyes(1.0f);
 
         Vec3 vec31 = getVectorForRotation(rotations[1], rotations[0]);

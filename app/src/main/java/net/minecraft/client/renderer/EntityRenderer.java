@@ -13,7 +13,7 @@ import java.util.concurrent.Callable;
 
 import githave.GitHave;
 import githave.event.Events;
-import githave.manager.rotation.RotationManager;
+import githave.manager.RotationManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBed;
 import net.minecraft.block.material.Material;

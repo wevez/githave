@@ -1,7 +1,6 @@
 package githave.module.impl.combat;
 
 import githave.event.Events;
-import githave.manager.rotation.RotationManager;
 import githave.util.*;
 import githave.util.bypass.BypassRotation;
 import githave.util.bypass.IndependentCPS;
@@ -16,8 +15,6 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import org.lwjgl.input.Keyboard;
 

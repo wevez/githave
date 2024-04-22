@@ -1,18 +1,16 @@
 package githave.module.impl.movement;
 
 import githave.event.Events;
-import githave.manager.rotation.RotationManager;
+import githave.manager.RotationManager;
 import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.module.setting.impl.DoubleSetting;
+import githave.util.RayUtil;
 import githave.util.bypass.BypassRotation;
 import githave.util.bypass.IndependentCPS;
 import githave.util.data.BlockData;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.*;
 import org.lwjgl.input.Keyboard;
 
 import java.util.*;
@@ -55,50 +53,95 @@ public class Scaffold extends Module {
 
     private final IndependentCPS independentCPS = new IndependentCPS(minCPS, maxCPS);
 
+    private boolean positionAdjustFinished = false;
+
+    private BlockPos lastGroundPos = null;
+
+    private int airTick;
+
     public Scaffold() {
         super("Scaffold", "Place blocks at your feet", ModuleCategory.Movement);
         this.getSettingList().addAll(Arrays.asList(
                 minCPS,
                 maxCPS
         ));
+        this.setKeyCode(Keyboard.KEY_C);
     }
 
     @Override
     protected void onEnable() {
+        lastGroundPos = null;
         data.clear();
         super.onEnable();
     }
 
     @Override
     protected void onDisable() {
-        this.setKeyCode(Keyboard.KEY_C);
+        positionAdjustFinished = false;
         data.clear();
         super.onDisable();
     }
 
     @Override
-    public void onMoveButton(Events.MoveButton event) {
-        if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer.posX + mc.thePlayer.motionX, mc.thePlayer.posY - 1, mc.thePlayer.posZ + mc.thePlayer.motionZ)).getBlock() == Blocks.air) {
-            if (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || mc.objectMouseOver.sideHit == EnumFacing.UP) {
-                event.sneak = true;
-            }
-        }
+    public void onMovementInput(Events.MovementInput event) {
         event.moveFix = true;
+        if (!positionAdjustFinished) {
+//            event.input.sneak = true;
+            if (lastGroundPos == null) {
+                System.out.println("lastGroundPos is null! Please stand on the ground once.");
+                return;
+            }
+            positionAdjustFinished = true;
+        }
+        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
+        if (mc.thePlayer.onGround && airTick > 1 && (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || mc.objectMouseOver.sideHit == EnumFacing.UP)) {
+//            event.input.jump = true;
+            mc.thePlayer.jump();
+        }
+        super.onMovementInput(event);
+    }
 
-        super.onMoveButton(event);
+    private boolean isDiagonal() {
+        return Math.abs(Math.round(RotationManager.virtualYaw / 90) * 90 - RotationManager.virtualYaw) > 22.5;
     }
 
     private float[] calcRotationStd() {
         float yaw = RotationManager.virtualYaw + 180f;
-        yaw = 46 + Math.round(yaw / 45) * 45;
+        yaw = Math.round(yaw / 45) * 45;
+        final boolean diagonal = isDiagonal();
+        if (!diagonal) {
+            double modX = mc.thePlayer.posX - Math.floor(mc.thePlayer.posX);
+            double modZ = mc.thePlayer.posZ - Math.floor(mc.thePlayer.posZ);
+            double va = 0.499;
+            double ma = 1 - va;
+            switch (EnumFacing.fromAngle(mc.thePlayer.rotationYaw).toString()) {
+                case "south":
+                    if (modX > ma) yaw += 45;
+                    if (modX < va) yaw -= 45;
+                    break;
+                case "north":
+                    if (modX > ma) yaw -= 45;
+                    if (modX < va) yaw += 45;
+                    break;
+                case "east":
+                    if (modZ > ma) yaw -= 45;
+                    if (modZ < va) yaw += 45;
+                    break;
+                case "west":
+                    if (modZ > ma) yaw += 45;
+                    if (modZ < va) yaw -= 45;
+                    break;
+            }
+        }
         return new float[] {
                 yaw,
-                80f
+                diagonal ? 75.6f : 75.9f
         };
     }
 
     @Override
     public void onRotation(Events.Rotation event) {
+        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
         if (lastDataUpdateTicks != mc.thePlayer.ticksExisted) {
             lastDataUpdateTicks = mc.thePlayer.ticksExisted;
             data = getBlockData();
@@ -107,23 +150,50 @@ public class Scaffold extends Module {
         float[] rotation = calcRotationStd();
         rotation = BypassRotation.getInstance().limitAngle(
                 new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
-                rotation,
-                mc.thePlayer.getPositionVector(),
-                mc.thePlayer
-                );
+                rotation
+        );
+        if (Math.abs(MathHelper.wrapAngleTo180_float(rotation[0] - mc.thePlayer.rotationYaw)) > 0.1) {
+            positionAdjustFinished = false;
+        }
+        mc.timer.timerSpeed = 1f;
+        System.out.println(rotation[1]);
         if (rotation != null) {
             event.yaw = rotation[0];
             event.pitch = rotation[1];
+//            RotationManager.virtualPrevYaw = RotationManager.virtualYaw = event.yaw = 45;
+//            RotationManager.virtualPitch = RotationManager.virtualPrevPitch = event.pitch = rotation[1];
         }
         super.onRotation(event);
     }
 
     @Override
+    public void onUpdate(Events.Update event) {
+        if (event.pre) {
+            BlockPos under = new BlockPos(mc.thePlayer).add(0, -1, 0);
+            if (mc.theWorld.getBlockState(under).getBlock() != Blocks.air) {
+                lastGroundPos = under;
+                airTick = 0;
+            } else {
+                airTick++;
+            }
+        }else {
+        }
+        super.onUpdate(event);
+    }
+
+    @Override
     public void onTick(Events.Tick event) {
         if (data.isEmpty()) return;
-        if (independentCPS.onTick()) {
+        if (!mc.thePlayer.onGround && independentCPS.onTick()) {
             mc.rightClickMouse();
+            return;
         }
+        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
+        MovingObjectPosition objectPosition = mc.objectMouseOver;
+        if (objectPosition == null) return;
+        if (objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+        if (objectPosition.sideHit == EnumFacing.UP) return;
+        mc.rightClickMouse();
         super.onTick(event);
     }
 

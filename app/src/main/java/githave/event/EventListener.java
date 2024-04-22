@@ -28,7 +28,7 @@ public interface EventListener {
 
     default void onSendPacket(Events.SendPacket event) {}
 
-    default void onMoveButton(Events.MoveButton event) {}
+    default void onMovementInput(Events.MovementInput event) {}
 
     default void onBlur(Events.BlurEvent event) {}
 

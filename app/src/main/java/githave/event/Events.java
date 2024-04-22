@@ -7,6 +7,8 @@ import net.minecraft.network.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovementInput;
+import net.minecraft.util.MovementInputFromOptions;
 import net.minecraft.world.World;
 
 public class Events {
@@ -210,22 +212,18 @@ public class Events {
         }
     }
 
-    public static class MoveButton extends EventArgument {
+    public static class MovementInput extends EventArgument {
 
-        public boolean left,  right, backward, forward, sneak, jump, moveFix = false;
+        public boolean moveFix = false;
+        public net.minecraft.util.MovementInput input;
 
-        public MoveButton(boolean button, boolean button2, boolean button3, boolean button4, boolean sneak, boolean jump) {
-            this.left = button;
-            this.right = button2;
-            this.backward = button3;
-            this.forward = button4;
-            this.sneak = sneak;
-            this.jump = jump;
+        public MovementInput(net.minecraft.util.MovementInput input) {
+            this.input = input;
         }
 
         @Override
         public void call(EventListener listener) {
-            listener.onMoveButton(this);
+            listener.onMovementInput(this);
         }
     }
 }

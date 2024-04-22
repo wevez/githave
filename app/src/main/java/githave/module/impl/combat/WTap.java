@@ -47,11 +47,11 @@ public class WTap extends Module {
     }
 
     @Override
-    public void onMoveButton(Events.MoveButton event) {
+    public void onMovementInput(Events.MovementInput event) {
         if (KillAura.target != null && mc.thePlayer.getNearestDistanceToEntity(KillAura.target) < 2 && mc.thePlayer.hurtTime == 0 && mc.thePlayer.onGround && !mc.gameSettings.keyBindJump.isPressed() && !timer2.hasTimeElapsed((long) delay.getValue()) && timer.hasTimeElapsed(500) && mc.objectMouseOver.entityHit != null && mc.objectMouseOver.entityHit.hurtResistantTime > 0) {
-            event.forward = false;
-            event.backward = false;
+            event.input.moveForward = 0f;
+            event.input.moveStrafe = 0;
         }
-        super.onMoveButton(event);
+        super.onMovementInput(event);
     }
 }

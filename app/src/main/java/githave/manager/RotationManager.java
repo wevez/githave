@@ -1,4 +1,4 @@
-package githave.manager.rotation;
+package githave.manager;
 
 public class RotationManager {
     public static float virtualPrevPitch;

@@ -2,8 +2,8 @@ package net.minecraft.client.entity;
 
 import githave.GitHave;
 import githave.event.Events;
-import githave.manager.rotation.PositionManager;
-import githave.manager.rotation.RotationManager;
+import githave.manager.PositionManager;
+import githave.manager.RotationManager;
 import githave.util.RotationUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
@@ -121,6 +121,17 @@ public class EntityPlayerSP extends AbstractClientPlayer
         {
             this.mc.getSoundHandler().playSound(new MovingSoundMinecartRiding(this, (EntityMinecart)entityIn));
         }
+    }
+
+    private void fixStrafe(final Events.MovementInput event) {
+        final float diff = (RotationManager.virtualYaw - this.rotationYaw),
+                f = (float) Math.sin(diff * ((float) Math.PI / 180F)),
+                f1 = (float) Math.cos(diff * ((float) Math.PI / 180F));
+        float multiplier = 1f;
+        float forward = (float) (Math.round((event.input.moveForward * (double) f1 + event.input.moveStrafe * (double) f) * multiplier)) / multiplier;
+        float strafe = (float) (Math.round((event.input.moveStrafe * (double) f1 - event.input.moveForward * (double) f) * multiplier)) / multiplier;
+        event.input.moveForward = forward;
+        event.input.moveStrafe = strafe;
     }
 
     public void onUpdate()
@@ -707,14 +718,24 @@ public class EntityPlayerSP extends AbstractClientPlayer
         float f = 0.8F;
         boolean flag2 = this.movementInput.moveForward >= f;
         this.movementInput.updatePlayerMoveState();
+        Events.MovementInput event = new Events.MovementInput(this.movementInput);
+        GitHave.INSTANCE.eventManager.call(event);
+        if (event.moveFix) {
+            this.fixStrafe(event);
+            if (event.input.sneak)
+            {
+                event.input.moveStrafe = (float)((double)event.input.moveStrafe * 0.3D);
+                event.input.moveForward = (float)((double)event.input.moveForward * 0.3D);
+            }
+        }
 
         if (this.isUsingItem() && !this.isRiding())
         {
-            Events.NoSlow event = new Events.NoSlow();
+            Events.NoSlow A = new Events.NoSlow();
 
-            GitHave.INSTANCE.eventManager.call(event);
+            GitHave.INSTANCE.eventManager.call(A);
 
-            if (!event.isCanceled())
+            if (!A.isCanceled())
             {
                 this.movementInput.moveStrafe *= 0.2F;
                 this.movementInput.moveForward *= 0.2F;

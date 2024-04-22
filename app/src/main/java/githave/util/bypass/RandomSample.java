@@ -1,7 +1,6 @@
 package githave.util.bypass;
 
 import githave.MCHook;
-import githave.manager.rotation.RotationManager;
 import net.minecraft.util.MathHelper;
 
 import java.util.Arrays;

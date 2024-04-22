@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import githave.manager.rotation.RotationManager;
+import githave.manager.RotationManager;
 import githave.util.AlgebraUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -1258,6 +1258,18 @@ public abstract class Entity implements ICommandSender
             double d2 = this.prevPosZ + (this.posZ - this.prevPosZ) * (double)partialTicks;
             return new Vec3(d0, d1, d2);
         }
+    }
+
+    public MovingObjectPosition rayTraceCustom(final double blockReachDistance, final float partialTicks, final float yaw, final float pitch)
+    {
+        final Vec3 vec3 = this.getPositionEyes(partialTicks);
+        final Vec3 vec31 = this.getLookCustom(yaw, pitch);
+        final Vec3 vec32 = vec3.addVector(vec31.xCoord * blockReachDistance, vec31.yCoord * blockReachDistance, vec31.zCoord * blockReachDistance);
+        return this.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
+    }
+    public Vec3 getLookCustom(final float yaw, final float pitch)
+    {
+        return this.getVectorForRotation(pitch, yaw);
     }
 
     public MovingObjectPosition rayTrace(double blockReachDistance, float partialTicks)

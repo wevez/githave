@@ -1,4 +1,4 @@
-package githave.manager.rotation;
+package githave.manager;
 
 import githave.MCHook;
 import net.minecraft.util.Vec3;
