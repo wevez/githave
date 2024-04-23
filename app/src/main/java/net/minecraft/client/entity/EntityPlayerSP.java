@@ -5,6 +5,7 @@ import githave.event.Events;
 import githave.manager.PositionManager;
 import githave.manager.RotationManager;
 import githave.util.RotationUtil;
+import githave.util.bypass.BypassRotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -305,6 +306,9 @@ public class EntityPlayerSP extends AbstractClientPlayer
         GitHave.INSTANCE.eventManager.call(rotationEvent);
 
         float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
+//        if (rot[0] == RotationManager.virtualYaw && rot[1] == RotationManager.virtualPitch) {
+//            rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot);
+//        }
         rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
         this.rotationYaw = rot[0];
         this.rotationPitch = rot[1];
@@ -722,11 +726,11 @@ public class EntityPlayerSP extends AbstractClientPlayer
         GitHave.INSTANCE.eventManager.call(event);
         if (event.moveFix) {
             this.fixStrafe(event);
-            if (event.input.sneak)
-            {
-                event.input.moveStrafe = (float)((double)event.input.moveStrafe * 0.3D);
-                event.input.moveForward = (float)((double)event.input.moveForward * 0.3D);
-            }
+        }
+        if (event.input.sneak)
+        {
+            event.input.moveStrafe = (float)((double)event.input.moveStrafe * 0.3D);
+            event.input.moveForward = (float)((double)event.input.moveForward * 0.3D);
         }
 
         if (this.isUsingItem() && !this.isRiding())

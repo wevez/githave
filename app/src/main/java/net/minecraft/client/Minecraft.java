@@ -250,7 +250,7 @@ public class Minecraft implements IThreadListener, IPlayerUsage
     private final Proxy proxy;
     private ISaveFormat saveLoader;
     private static int debugFPS;
-    private int rightClickDelayTimer;
+    public int rightClickDelayTimer;
     private String serverName;
     private int serverPort;
     public boolean inGameHasFocus;
@@ -1023,7 +1023,6 @@ public class Minecraft implements IThreadListener, IPlayerUsage
 
         for (int j = 0; j < this.timer.elapsedTicks; ++j)
         {
-            GitHave.INSTANCE.eventManager.call(tickEvent);
             this.runTick();
         }
 
@@ -2032,6 +2031,8 @@ public class Minecraft implements IThreadListener, IPlayerUsage
             }
             else
             {
+
+                GitHave.INSTANCE.eventManager.call(tickEvent);
                 while (this.gameSettings.keyBindAttack.isPressed())
                 {
                     this.clickMouse();

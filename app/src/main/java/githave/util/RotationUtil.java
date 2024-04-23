@@ -13,7 +13,7 @@ public class RotationUtil implements MCHook {
         final float lastYaw = lastRotations[0];
         final float lastPitch = lastRotations[1];
 
-        final float f = mc.gameSettings.mouseSensitivity * 0.6F + 0.5F;
+        final float f = 0.25f * 0.6F + 0.5F;
         final float gcd = f * f * f * 1.5F;
 
         final float deltaYaw = yaw - lastYaw;
