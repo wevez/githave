@@ -5,6 +5,7 @@ import githave.event.Events;
 import githave.manager.PositionManager;
 import githave.manager.RotationManager;
 import githave.util.RotationUtil;
+import githave.util.TimerUtil;
 import githave.util.bypass.BypassRotation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MovingSoundMinecartRiding;
@@ -306,6 +307,9 @@ public class EntityPlayerSP extends AbstractClientPlayer
         GitHave.INSTANCE.eventManager.call(rotationEvent);
 
         float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
+        if (!resetTimer.hasTimeElapsed(500)) {
+            rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot);
+        }
 //        if (rot[0] == RotationManager.virtualYaw && rot[1] == RotationManager.virtualPitch) {
 //            rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot);
 //        }
@@ -314,6 +318,8 @@ public class EntityPlayerSP extends AbstractClientPlayer
         this.rotationPitch = rot[1];
         //super.setAngles(yaw, pitch);
     }
+
+    public static TimerUtil resetTimer = new TimerUtil();
 
     public void closeScreen()
     {
