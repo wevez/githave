@@ -79,6 +79,7 @@ public class Scaffold extends Module {
     @Override
     protected void onEnable() {
         placeCounter = 0;
+        positionAdjustFinished = false;
         lastGroundPos = null;
         data.clear();
         super.onEnable();
@@ -95,23 +96,24 @@ public class Scaffold extends Module {
     @Override
     public void onMovementInput(Events.MovementInput event) {
         event.moveFix = true;
-        if (!positionAdjustFinished) {
-//            event.input.sneak = true;
-            if (lastGroundPos == null) {
-                System.out.println("lastGroundPos is null! Please stand on the ground once.");
-                return;
-            }
+        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK &&
+                (Math.abs(mc.objectMouseOver.hitVec.xCoord- Math.floor(mc.objectMouseOver.hitVec.xCoord) - 0.5) < 0.1 ||
+                        Math.abs(mc.objectMouseOver.hitVec.zCoord - Math.floor(mc.objectMouseOver.hitVec.zCoord) - 0.5) < 0.1)) {
             positionAdjustFinished = true;
         }
+        if (!positionAdjustFinished) event.input.sneak = true;
+//        if (!positionAdjustFinished) {
+////            event.input.sneak = true;
+//            if (lastGroundPos == null) {
+////                System.out.println("lastGroundPos is null! Please stand on the ground once.");
+//                return;
+//            }
+//            positionAdjustFinished = true;
+//        }
         MovingObjectPosition a = mc.thePlayer.rayTrace(3, 1f);
-        if (!isDiagonal() && (airTimer.hasTimeElapsed(100) && mc.thePlayer.onGround && (a.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || a.sideHit == EnumFacing.UP))) {
+        if (!isDiagonal() && mc.thePlayer.onGround && (placeCounter > 7)) {
             event.input.jump = true;
-//            mc.thePlayer.jump();
-            sneakFLag = true;
             placeCounter = 0;
-        }
-        if (sneakFLag) {
-//            event.input.sneak = true;
         }
         super.onMovementInput(event);
     }
@@ -153,7 +155,8 @@ public class Scaffold extends Module {
                     break;
             }
         }
-        float pitch = diagonal ? 75.9003f : 76.7f;
+//        float pitch = diagonal ? 75.9003f : 75.6f;
+        float pitch = 76.2f;
         if (lastGroundPos != null ) {
 //            for (float p = 70; p < 90; p += 0.05f) {
 //                MovingObjectPosition position = mc.thePlayer.rayTraceCustom(3, 1, yaw, p);
@@ -176,12 +179,13 @@ public class Scaffold extends Module {
             data = getBlockData();
         }
         float[] rotation = calcRotationStd();
-        if (Math.abs(MathHelper.wrapAngleTo180_float(rotation[0] - mc.thePlayer.rotationYaw)) > 0.1) {
+        if (Math.abs(MathHelper.wrapAngleTo180_float(rotation[0] - mc.thePlayer.rotationYaw)) > 1) {
             positionAdjustFinished = false;
+            System.out.println("A");
             rotation = BypassRotation.getInstance().limitAngle(
                 new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
                 rotation
-        );
+            );
         }
         if (rotation != null) {
             event.yaw = rotation[0];
@@ -195,45 +199,65 @@ public class Scaffold extends Module {
     @Override
     public void onUpdate(Events.Update event) {
         if (event.pre) {
-            BlockPos under = new BlockPos(mc.thePlayer).add(0, -1, 0);
-            if (mc.theWorld.getBlockState(under).getBlock() != Blocks.air) {
-                lastGroundPos = under;
+            if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) {
+                lastGroundPos = new BlockPos(mc.thePlayer).add(0, -1, 0);
                 airTimer.reset();
             }
+            if (lastGroundPos == null) return;
+            EnumFacing face = null;
+//            final double modX = lastGroundPos == null ? mc.thePlayer.posX - Math.floor(mc.thePlayer.posX) : lastGroundPos.getX() + 0.5 - mc.thePlayer.posX;
+//            final double modZ = lastGroundPos == null ? mc.thePlayer.posZ - Math.floor(mc.thePlayer.posZ) : lastGroundPos.getZ() + 0.5- mc.thePlayer.posZ;
+//            switch (EnumFacing.fromAngle(RotationManager.virtualYaw)) {
+//                case SOUTH:
+//                    break;
+//                case EAST:
+//                    break;
+//                case WEST:
+//                    break;
+//                case NORTH:
+//                    face = modX > 0 ? EnumFacing.SOUTH : EnumFacing.SOUTH;
+//                    break;
+//            }
+//            if (face == null) return;
+//            if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).offset(face)).getBlock() != Blocks.air) {
+//                System.out.println("YEs");
+//                airTimer.reset();
+//            }
         }
         super.onUpdate(event);
     }
 
     private void rightClick(MovingObjectPosition objectPosition) {
+//        mc.rightClickDelayTimer = 0;
+        if (mc.thePlayer.isSneaking()) return;
         if (mc.playerController.getIsHittingBlock()) return;
         if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) return;
-        boolean clicked = false;
-        if (cps.onTick()) {
-            mc.rightClickMouse();
-            clicked = true;
-        }
         if (objectPosition == null || objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
         if (mc.theWorld.getBlockState(objectPosition.getBlockPos()).getBlock() == Blocks.air) return;
         if (mc.thePlayer.getHeldItem() == null) return;
+        if (!mc.thePlayer.onGround && objectPosition.hitVec.yCoord >= mc.thePlayer.posY) return;
         float x = (float) (objectPosition.hitVec.xCoord - objectPosition.getBlockPos().getX());
         float y = (float) (objectPosition.hitVec.yCoord - objectPosition.getBlockPos().getY());
         float z = (float) (objectPosition.hitVec.zCoord - objectPosition.getBlockPos().getZ());
+        final boolean tick = cps.onTick();
         if (mc.thePlayer.getHeldItem().getItem().onItemUse(mc.thePlayer.getHeldItem(), mc.thePlayer, mc.theWorld, objectPosition.getBlockPos(), objectPosition.sideHit,
                 x, y,z)) {
-            if (!clicked) {
-                mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(objectPosition.getBlockPos(), objectPosition.sideHit.getIndex(), mc.thePlayer.inventory.getCurrentItem(), x, y, z));
-                mc.thePlayer.swingItem();
-            }
-            placeCounter++;
+            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(objectPosition.getBlockPos(), objectPosition.sideHit.getIndex(), mc.thePlayer.inventory.getCurrentItem(), x, y, z));
+            mc.thePlayer.swingItem();
+            if (objectPosition.sideHit != EnumFacing.UP) placeCounter++;
             clickTimer.reset();
             sneakFLag = false;
+            mc.rightClickDelayTimer = 4;
+        } else {
+            if (tick) {
+                mc.rightClickMouse();
+            }
         }
     }
 
     @Override
     public void onTick(Events.Tick event) {
-//        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
-        this.rightClick(mc.objectMouseOver);
+        this.rightClick(mc  .objectMouseOver);
         super.onTick(event);
     }
 
