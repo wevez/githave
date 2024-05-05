@@ -10,6 +10,7 @@ import de.florianmichael.viamcp.MCPVLBPipeline;
 import de.florianmichael.viamcp.ViaMCP;
 import githave.GitHave;
 import githave.event.Events;
+import githave.manager.RotationManager;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
@@ -40,6 +41,8 @@ import java.net.SocketAddress;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
+
+import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.CryptManager;
@@ -195,6 +198,11 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
             Events.SendPacket event = new Events.SendPacket(true, packetIn);
             GitHave.INSTANCE.eventManager.call(event);
             if (event.isCanceled()) return;
+
+            if (event.packet instanceof C03PacketPlayer) {
+                RotationManager.packetPitch = ((C03PacketPlayer) event.packet).getPitch();
+                RotationManager.packetYaw = ((C03PacketPlayer) event.packet).getYaw();
+            }
 
             this.flushOutboundQueue();
             this.dispatchPacket(packetIn, (GenericFutureListener <? extends Future <? super Void >> [])null);

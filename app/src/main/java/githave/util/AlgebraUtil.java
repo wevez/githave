@@ -23,4 +23,8 @@ public class AlgebraUtil implements MCHook {
                 MathHelper.clamp_double(p.zCoord, bb.minZ, bb.maxZ)
         );
     }
+
+    public static Vec3 partialVec(Vec3 lastPointer, Vec3 currentPointer, float renderPartialTicks) {
+        return lastPointer.add(currentPointer.subtract(lastPointer).scale(renderPartialTicks));
+    }
 }

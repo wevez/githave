@@ -42,6 +42,14 @@ public class Vec3
         return new Vec3(vec.xCoord - this.xCoord, vec.yCoord - this.yCoord, vec.zCoord - this.zCoord);
     }
 
+    public Vec3 scale(double v) {
+        return new Vec3(
+                this.xCoord * v,
+                this.yCoord * v,
+                this.zCoord * v
+        );
+    }
+
     public Vec3 normalize()
     {
         double d0 = (double)MathHelper.sqrt_double(this.xCoord * this.xCoord + this.yCoord * this.yCoord + this.zCoord * this.zCoord);
