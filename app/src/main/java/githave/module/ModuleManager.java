@@ -11,23 +11,29 @@ import java.util.List;
 public class ModuleManager {
 
     private final List<Module> modules = Arrays.asList(
+            // Combat
             new AntiBot(),
+            new AntiFire(),
             new AutoClicker(),
             new Backtrack(),
             new KillAura(),
             new TickBase(),
             new Velocity(),
             new WTap(),
-
-            new TargetHUD(),
-            new ModuleList(),
-            new Animations(),
-            new HUD(),
-            new Blink(),
-            new AutoSprint(),
-            new ChestStealer(),
+            // Movement
             new Scaffold(),
-            new ESP()
+            // Player
+            new AutoSprint(),
+            new AutoTool(),
+            new Blink(),
+            new ChestStealer(),
+            new InvManager(),
+            // Render
+            new Animations(),
+            new ESP(),
+            new HUD(),
+            new ModuleList(),
+            new TargetHUD()
     );
 
     public void init() {

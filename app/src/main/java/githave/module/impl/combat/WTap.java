@@ -4,6 +4,7 @@ import githave.event.Events;
 import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.module.setting.impl.DoubleSetting;
+import githave.module.setting.impl.ModeSetting;
 import githave.util.TimerUtil;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 
@@ -11,12 +12,19 @@ import java.util.Arrays;
 
 public class WTap extends Module {
 
+    // TODO
+    private final ModeSetting mode = new ModeSetting.Builder("Mode", "Sprint Reset")
+            .build();
+
     private final DoubleSetting delay = new DoubleSetting.Builder("Delay", 100, 0, 500, 10)
             .build();
 
     public WTap() {
         super("WTap", "Auto WTap", ModuleCategory.Combat);
-        this.getSettingList().addAll(Arrays.asList(delay));
+        this.getSettingList().addAll(Arrays.asList(
+                mode,
+                delay
+        ));
     }
 
     private final TimerUtil timer = new TimerUtil();

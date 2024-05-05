@@ -6,10 +6,7 @@ import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.module.setting.impl.DoubleSetting;
 import githave.module.setting.impl.ModeSetting;
-import githave.util.AlgebraUtil;
-import githave.util.MoveUtil;
-import githave.util.RotationUtil;
-import githave.util.TimerUtil;
+import githave.util.*;
 import githave.util.bypass.BypassRotation;
 import githave.util.bypass.IndependentCPS;
 import githave.util.data.BlockData;
@@ -115,7 +112,7 @@ public class Scaffold extends Module {
     private boolean isGoodBlock(ItemStack stack) {
         if (stack == null || !(stack.getItem() instanceof ItemBlock)) return false;
         if (stack.stackSize <= affordBlock.getValue()) return false;
-        return true;
+        return !ItemUtil.invalidBlocks.contains(((ItemBlock) stack.getItem()).getBlock());
     }
 
     @Override
