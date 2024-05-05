@@ -4,6 +4,7 @@ import githave.GitHave;
 import githave.event.Events;
 import githave.manager.PositionManager;
 import githave.manager.RotationManager;
+import githave.util.PlayerUtil;
 import githave.util.RotationUtil;
 import githave.util.TimerUtil;
 import githave.util.bypass.BypassRotation;
@@ -94,7 +95,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
     public void moveEntity(double x, double y, double z)
     {
         Events.Move event = new Events.Move(true, x, y, z);
-        GitHave.INSTANCE.eventManager.call(event);
+        if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(event);
 
         if (event.isCanceled())
         {
@@ -103,7 +104,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
 
         super.moveEntity(event.x, event.y, event.z);
         Events.Move event2 = new Events.Move(false, x, y, z);
-        GitHave.INSTANCE.eventManager.call(event2);
+        if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(event2);
     }
 
     public boolean attackEntityFrom(DamageSource source, float amount)
@@ -140,7 +141,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
     {
         if (this.worldObj.isBlockLoaded(new BlockPos(this.posX, 0.0D, this.posZ)))
         {
-            GitHave.INSTANCE.eventManager.call(new Events.Update(true));
+            if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(new Events.Update(true));
             PositionManager.updatePositions();
             super.onUpdate();
 
@@ -153,7 +154,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
             {
                 this.onUpdateWalkingPlayer();
             }
-            GitHave.INSTANCE.eventManager.call(new Events.Update(false));
+            if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(new Events.Update(false));
         }
     }
 
@@ -307,12 +308,13 @@ public class EntityPlayerSP extends AbstractClientPlayer
                     RotationManager.virtualPitch
             );
 
-            GitHave.INSTANCE.eventManager.call(rotationEvent);
+            if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(rotationEvent);
             lastRotationTick = mc.thePlayer.ticksExisted;
             float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
             if (!resetTimer.hasTimeElapsed(500)) {
                 rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot, 5, 2);
-            }rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
+            }
+//            rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
             this.rotationYaw = rot[0];
             this.rotationPitch = rot[1];
         }
@@ -728,7 +730,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
         boolean flag2 = this.movementInput.moveForward >= f;
         this.movementInput.updatePlayerMoveState();
         Events.MovementInput event = new Events.MovementInput(this.movementInput);
-        GitHave.INSTANCE.eventManager.call(event);
+        if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(event);
         if (event.moveFix || !EntityPlayerSP.resetTimer.hasTimeElapsed(500)) {
             this.fixStrafe(event);
         }
@@ -742,7 +744,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
         {
             Events.NoSlow A = new Events.NoSlow();
 
-            GitHave.INSTANCE.eventManager.call(A);
+            if (!PlayerUtil.predicting) GitHave.INSTANCE.eventManager.call(A);
 
             if (!A.isCanceled())
             {

@@ -6,7 +6,7 @@ import net.minecraft.util.Vec3;
 
 public class RotationUtil implements MCHook {
 
-    private static final float globalSens = 0.25f;
+    private static final float globalSens = 0.1f;
 
     public static float[] getFixedRotation(final float[] rotations, final float[] lastRotations) {
         final float yaw = rotations[0];

@@ -121,10 +121,6 @@ public class Scaffold extends Module {
 
     @Override
     public void onMovementInput(Events.MovementInput event) {
-        if (!MoveUtil.isMoving(event) && event.input.jump) shouldScaffold = true;
-        if (!shouldScaffold) {
-            return;
-        }
         if (MoveUtil.isMoving(event)) {
             int currentSlot = mc.thePlayer.inventory.currentItem;
             if (mc.thePlayer.inventory.getStackInSlot(currentSlot) == null || !(mc.thePlayer.inventory.getStackInSlot(currentSlot).getItem() instanceof ItemBlock)) {
@@ -139,34 +135,27 @@ public class Scaffold extends Module {
                         break;
                 }
             }
-        } else {
-            return;
         }
         event.moveFix = true;
         // TODO position adjustment for diagonal
         if (mode.getValue().equals("Polar")) {
-            if (event.input.jump)  {
-                positionAdjustFinished = true;
-                adjustResetForJump = true;
-            } else if (adjustResetForJump) {
-                adjustResetForJump = false;
-                positionAdjustFinished = false;
-            }
             if (!positionAdjustFinished) {
                 if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) {
                     sneakTimer.reset();
                 }
                 event.input.sneak = true;
                 if (!isDiagonal()) {
-                    event.input.moveForward = 1f;
-                    if (sneakTimer.hasTimeElapsed(500)) {
-                        positionAdjustFinished = true;
+                    if (sneakTimer.hasTimeElapsed(250)) {
+                        if (sneakTimer.hasTimeElapsed(500)) {
+                            positionAdjustFinished = true;
+                            event.input.sneak = false;
+                        }
                         event.input.moveForward = 0f;
                         event.input.moveStrafe = 0f;
-                        event.input.sneak = false;
+                    } else {
+                        event.input.moveForward = 1f;
                     }
                 } else {
-                    event.input.moveStrafe = 1f;
                     positionAdjustFinished = true;
                 }
             }
@@ -209,15 +198,17 @@ public class Scaffold extends Module {
     private int offGroundTick;
 
     private float[] calcRotationStd() {
-        float yaw = RotationManager.virtualYaw + 180f;
+        float yaw = MathHelper.wrapAngleTo180_float(RotationManager.virtualYaw + 180f);
         yaw = Math.round(yaw / 45) * 45;
         final boolean diagonal = isDiagonal();
         if (!diagonal) {
             final double modX = lastGroundPos == null ? mc.thePlayer.posX - Math.floor(mc.thePlayer.posX) : lastGroundPos.getX() + 0.5 - mc.thePlayer.posX;
             final double modZ = lastGroundPos == null ? mc.thePlayer.posZ - Math.floor(mc.thePlayer.posZ) : lastGroundPos.getZ() + 0.5- mc.thePlayer.posZ;
+//            final double modX =  mc.thePlayer.posX - Math.floor(mc.thePlayer.posX);
+//            final double modZ = mc.thePlayer.posZ - Math.floor(mc.thePlayer.posZ);
             double va = 0;
             double ma = 0;
-            switch (EnumFacing.fromAngle(mc.thePlayer.rotationYaw).toString()) {
+            switch (EnumFacing.fromAngle(yaw).toString()) {
                 case "south":
                     if (modX > ma) yaw -= 45;
                     if (modX < va) yaw += 45;
@@ -236,10 +227,10 @@ public class Scaffold extends Module {
                     break;
             }
         }
-        float pitch = diagonal ? 76.2f : 76.2f;
-        System.out.println(RotationManager.virtualPitch);
+        float pitch = diagonal ? 76.2f : 75.8f;
+//        System.out.println(RotationManager.virtualPitch);
 
-        if (offGroundTick > 4 || mode.getValue().equals("Intave")) {
+        if (mode.getValue().equals("Intave")) {
             pitch = mc.thePlayer.rotationPitch;
             yaw = mc.thePlayer.rotationYaw;
             if (data != null && mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() == Blocks.air) {
@@ -361,6 +352,7 @@ public class Scaffold extends Module {
             );
         }
         if (rotation != null) {
+//            System.out.println(rotation[0]);
             event.yaw = rotation[0];
             event.pitch = rotation[1];
         }
@@ -400,8 +392,9 @@ public class Scaffold extends Module {
     }
 
     private void rightClick(MovingObjectPosition objectPosition) {
-        mc.rightClickDelayTimer = 0;
-        if (!positionAdjustFinished && mc.thePlayer.onGround && mc.thePlayer.isSneaking()) return;
+//        mc.rightClickDelayTimer = 0;
+        if (!positionAdjustFinished) return;
+        if (mc.thePlayer.isSneaking()) return;
         if (mc.playerController.getIsHittingBlock()) return;
         if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) return;
         if (objectPosition == null || objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
