@@ -154,9 +154,9 @@ public class Scaffold extends Module {
             }
         }
         if (!sneakTimer.hasTimeElapsed(150)) {
-            event.input.sneak = true;
-            event.input.moveForward = 0f;
-            event.input.moveStrafe = 0f;
+//            event.input.sneak = true;
+//            event.input.moveForward = 0f;
+//            event.input.moveStrafe = 0f;
         }
 //        if (mode.getValue().equals("Intave")) {
 //            if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer,
@@ -296,6 +296,7 @@ public class Scaffold extends Module {
     }
 
     private boolean isGood(MovingObjectPosition objectPosition) {
+        if (data == null) return false;
         if (objectPosition == null) return false;
         if (objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return false;
         if (mc.theWorld.getBlockState(objectPosition.getBlockPos()).getBlock() == Blocks.air) return false;
@@ -316,7 +317,7 @@ public class Scaffold extends Module {
         rotation = BypassRotation.getInstance().limitAngle(
                 new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
                 rotation,
-                5f,
+                0.1f,
                 0.1f
         );
         if (rotation != null) {

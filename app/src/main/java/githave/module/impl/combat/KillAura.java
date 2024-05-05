@@ -281,9 +281,10 @@ public class KillAura extends Module {
                     if (mc.thePlayer.getDistanceSq(x, y, z) > attackRange.getValue()) continue;;
                     float current = (float) mc.thePlayer.getDistanceSq(x, y, z);
                     if (current > min) continue;
-                    if (mc.theWorld.rayTraceBlocks(eye, center, false) != null) continue;
+                    Vec3 g = new Vec3(x, y, z);
+                    if (mc.theWorld.rayTraceBlocks(eye, g, false) != null) continue;
                     min = current;
-                    center = new Vec3(x, y, z);
+                    center = g;
                 }
             }
         }
@@ -305,9 +306,10 @@ public class KillAura extends Module {
                     if (mc.thePlayer.getDistanceSq(x, y, z) > attackRange.getValue()) continue;;
                     float current = (float) mc.thePlayer.getDistanceSq(x, y, z);
                     if (current <= min) continue;
-                    if (mc.theWorld.rayTraceBlocks(eye, center, false) != null) continue;
+                    Vec3 g = new Vec3(x, y, z);
+                    if (mc.theWorld.rayTraceBlocks(eye, g, false) != null) continue;
                     min = current;
-                    center = new Vec3(x, y, z);
+                    center = g;
                 }
             }
         }
