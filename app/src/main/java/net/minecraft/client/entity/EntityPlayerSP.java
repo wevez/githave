@@ -288,6 +288,8 @@ public class EntityPlayerSP extends AbstractClientPlayer
         }
     }
 
+    private int lastRotationTick;
+
     @Override
     public void setAngles(float yaw, float pitch) {
         float f = RotationManager.virtualPitch;
@@ -297,26 +299,23 @@ public class EntityPlayerSP extends AbstractClientPlayer
         RotationManager.virtualPitch = MathHelper.clamp_float(RotationManager.virtualPitch, -90.0F, 90.0F);
         RotationManager.virtualPrevPitch += RotationManager.virtualPitch - f;
         RotationManager.virtualPrevYaw += RotationManager.virtualYaw - f1;
-        //args.set(0, 0d);
-        //args.set(1, 0d);
 
-        final Events.Rotation rotationEvent = new Events.Rotation(
-                RotationManager.virtualYaw,
-                RotationManager.virtualPitch
-        );
-        GitHave.INSTANCE.eventManager.call(rotationEvent);
 
-        float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
-        if (!resetTimer.hasTimeElapsed(500)) {
-            rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot);
+        if (lastRotationTick != mc.thePlayer.ticksExisted) {
+            final Events.Rotation rotationEvent = new Events.Rotation(
+                    RotationManager.virtualYaw,
+                    RotationManager.virtualPitch
+            );
+
+            GitHave.INSTANCE.eventManager.call(rotationEvent);
+            lastRotationTick = mc.thePlayer.ticksExisted;
+            float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
+            if (!resetTimer.hasTimeElapsed(500)) {
+                rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot, 10, 2);
+            }rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
+            this.rotationYaw = rot[0];
+            this.rotationPitch = rot[1];
         }
-//        if (rot[0] == RotationManager.virtualYaw && rot[1] == RotationManager.virtualPitch) {
-//            rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot);
-//        }
-        rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
-        this.rotationYaw = rot[0];
-        this.rotationPitch = rot[1];
-        //super.setAngles(yaw, pitch);
     }
 
     public static TimerUtil resetTimer = new TimerUtil();
@@ -730,7 +729,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
         this.movementInput.updatePlayerMoveState();
         Events.MovementInput event = new Events.MovementInput(this.movementInput);
         GitHave.INSTANCE.eventManager.call(event);
-        if (event.moveFix) {
+        if (event.moveFix || !EntityPlayerSP.resetTimer.hasTimeElapsed(500)) {
             this.fixStrafe(event);
         }
         if (event.input.sneak)

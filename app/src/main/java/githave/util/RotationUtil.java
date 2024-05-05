@@ -6,6 +6,8 @@ import net.minecraft.util.Vec3;
 
 public class RotationUtil implements MCHook {
 
+    private static final float globalSens = 0.25f;
+
     public static float[] getFixedRotation(final float[] rotations, final float[] lastRotations) {
         final float yaw = rotations[0];
         final float pitch = rotations[1];
@@ -13,8 +15,7 @@ public class RotationUtil implements MCHook {
         final float lastYaw = lastRotations[0];
         final float lastPitch = lastRotations[1];
 
-        final float f = 0.25f * 0.6F + 0.5F;
-        final float gcd = f * f * f * 1.5F;
+        final float gcd = getGcd();
 
         final float deltaYaw = yaw - lastYaw;
         final float deltaPitch = pitch - lastPitch;
@@ -25,7 +26,13 @@ public class RotationUtil implements MCHook {
         final float fixedYaw = lastYaw + fixedDeltaYaw;
         final float fixedPitch = lastPitch + fixedDeltaPitch;
 
-        return new float[]{fixedYaw, fixedPitch};
+        return new float[] { fixedYaw, fixedPitch };
+    }
+
+    public static float getGcd() {
+        final float f = globalSens * 0.6F + 0.5F;
+        final float gcd = f * f * f * 1.5F;;
+        return gcd;
     }
 
     public static float[] rotation(double x, double y, double z, double ax, double ay, double az) {

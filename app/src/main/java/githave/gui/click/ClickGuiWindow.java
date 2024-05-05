@@ -5,10 +5,7 @@ import githave.gui.font.TTFFontRenderer;
 import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.module.setting.ModuleSetting;
-import githave.module.setting.impl.BooleanSetting;
-import githave.module.setting.impl.DoubleSetting;
-import githave.module.setting.impl.ModeSetting;
-import githave.module.setting.impl.MultiBooleanSetting;
+import githave.module.setting.impl.*;
 import githave.util.animation.AnimationUtil;
 import githave.util.animation.LinearAnimation;
 import githave.util.render.ClickUtil;
@@ -135,6 +132,9 @@ public class ClickGuiWindow {
                     }
                     offset += 14 * ms.getValue().size() * p;
                     StencilUtil.uninitStencilBuffer();
+                } else if (s instanceof ColorSetting) {
+                    ColorSetting cs = (ColorSetting) s;
+                    // TODO
                 }
             }
         }

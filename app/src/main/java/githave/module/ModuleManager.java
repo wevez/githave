@@ -1,14 +1,9 @@
 package githave.module;
 
 import githave.module.impl.combat.*;
-import githave.module.impl.movement.Scaffold;
-import githave.module.impl.player.AutoSprint;
-import githave.module.impl.player.Blink;
-import githave.module.impl.player.ChestStealer;
-import githave.module.impl.render.Animations;
-import githave.module.impl.render.HUD;
-import githave.module.impl.render.ModuleList;
-import githave.module.impl.render.TargetHUD;
+import githave.module.impl.movement.*;
+import githave.module.impl.player.*;
+import githave.module.impl.render.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +26,8 @@ public class ModuleManager {
             new Blink(),
             new AutoSprint(),
             new ChestStealer(),
-            new Scaffold()
+            new Scaffold(),
+            new ESP()
     );
 
     public void init() {

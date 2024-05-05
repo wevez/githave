@@ -261,6 +261,10 @@ public class BlockPos extends Vec3i
         return new Vec3(this.getX(), this.getY(), this.getZ());
     }
 
+    public boolean equalsBlockPos(BlockPos playerPos) {
+        return this.getX() == playerPos.getX() && this.getY() == playerPos.getY() && this.getZ() == playerPos.getZ();
+    }
+
     public static final class MutableBlockPos extends BlockPos
     {
         private int x;

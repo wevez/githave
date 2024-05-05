@@ -36,21 +36,35 @@ public class ChestStealer extends Module {
 
     private final DoubleSetting startDelay = new DoubleSetting.Builder("Start Delay", 250, 0, 1000, 10)
             .build();
+
     private final DoubleSetting minDelay = new DoubleSetting.Builder("Min Delay", 100, 0, 1000, 10)
             .build();
+
     private final DoubleSetting maxDelay = new DoubleSetting.Builder("Max Delay", 500, 0, 1000, 10)
             .build();
+
     private final BooleanSetting ignoreJunk = new BooleanSetting.Builder("Ignore Junk")
             .value(true)
             .build();
+
     private final BooleanSetting autoClose = new BooleanSetting.Builder("Auto Close")
             .value(true)
             .build();
+
     private final BooleanSetting chestNameCheck = new BooleanSetting.Builder("Chest Name Check")
             .value(true)
             .build();
-    private final ModeSetting stealMode = new ModeSetting.Builder("Steal Mode", "Normal", "Random", "Reverse", "Distance")
+
+    private final ModeSetting stealOrder = new ModeSetting.Builder("Steal Mode", "Normal", "Random", "Reverse", "Distance")
             .build();
+
+    private final ModeSetting stealMethod = new ModeSetting.Builder("Steal Method", "Normal", "ViaFix")
+            .build();
+
+    private long currentDelay;
+
+    private final TimerUtil timer = new TimerUtil();
+    private final TimerUtil startTimer = new TimerUtil();
 
     public ChestStealer() {
         super("ChestStealer", "", ModuleCategory.Player);
@@ -61,10 +75,18 @@ public class ChestStealer extends Module {
                 ignoreJunk,
                 autoClose,
                 chestNameCheck,
-                stealMode
+                stealOrder,
+                stealMethod
         ));
     }
 
-    private final TimerUtil timer = new TimerUtil();
-    private final TimerUtil startTimer = new TimerUtil();
+    @Override
+    public void onUpdate(Events.Update event) {
+        if (!event.pre) return;
+        super.onUpdate(event);
+    }
+
+    private void updateCurrentDelay() {
+        currentDelay = RandomUtil.nextInt((int) minDelay.getValue(), (int) maxDelay.getValue());
+    }
 }

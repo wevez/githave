@@ -25,16 +25,16 @@ public class BypassRotation implements MCHook {
     private float minumumTurnSpeedH = 0.05f;
     private float minumumTurnSpeedV = 0.05f;
 
-    public float[] limitAngle(float[] current, float[] to) {
+    public float[] limitAngle(float[] current, float[] to, float yawBias, float pitchBias) {
         float yawDifference = MathHelper.wrapAngleTo180_float(to[0] - current[0]);
         float pitchDifference = to[1] - current[1];
 
         float rotationDifference = (float) Math.hypot(yawDifference, pitchDifference);
 
-        float[] factor = computeTurnSpeed((float) 0, Math.abs(yawDifference), Math.abs(pitchDifference), false);
+        float[] factor = computeTurnSpeed((float) 0, Math.abs(yawDifference), Math.abs(pitchDifference), true);
 
-        float straightLineYaw = Math.max(Math.abs(yawDifference / rotationDifference) * factor[0], minumumTurnSpeedH + 100) / 5;
-        float straightLinePitch = Math.max(Math.abs(pitchDifference / rotationDifference) * factor[1], minumumTurnSpeedV * 100) / 5;
+        float straightLineYaw = Math.max(Math.abs(yawDifference / rotationDifference) * factor[0], minumumTurnSpeedH + 100) / yawBias;
+        float straightLinePitch = Math.max(Math.abs(pitchDifference / rotationDifference) * factor[1], minumumTurnSpeedV * 100) / pitchBias;
 
         return new float[] {
                 current[0] + MathHelper.clamp_float(yawDifference, -straightLineYaw, straightLineYaw),

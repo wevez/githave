@@ -7,8 +7,7 @@ import java.util.function.Consumer;
 
 public class DoubleSetting extends ModuleSetting {
 
-    private static final Consumer<Double> PASS = v -> {
-    };
+    private static final Consumer<Double> PASS = v -> { };
 
     private final double min, max, interval;
 

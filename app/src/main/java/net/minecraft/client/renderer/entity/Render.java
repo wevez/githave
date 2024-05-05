@@ -305,16 +305,16 @@ public abstract class Render<T extends Entity> implements IEntityRenderer
     {
         if (this.renderManager.options != null)
         {
-            if (this.renderManager.options.entityShadows && this.shadowSize > 0.0F && !entityIn.isInvisible() && this.renderManager.isRenderShadow())
-            {
-                double d0 = this.renderManager.getDistanceToCamera(entityIn.posX, entityIn.posY, entityIn.posZ);
-                float f = (float)((1.0D - d0 / 256.0D) * (double)this.shadowOpaque);
-
-                if (f > 0.0F)
-                {
-                    this.renderShadow(entityIn, x, y, z, f, partialTicks);
-                }
-            }
+//            if (this.renderManager.options.entityShadows && this.shadowSize > 0.0F && !entityIn.isInvisible() && this.renderManager.isRenderShadow())
+//            {
+//                double d0 = this.renderManager.getDistanceToCamera(entityIn.posX, entityIn.posY, entityIn.posZ);
+//                float f = (float)((1.0D - d0 / 256.0D) * (double)this.shadowOpaque);
+//
+//                if (f > 0.0F)
+//                {
+//                    this.renderShadow(entityIn, x, y, z, f, partialTicks);
+//                }
+//            }
 
             if (entityIn.canRenderOnFire() && (!(entityIn instanceof EntityPlayer) || !((EntityPlayer)entityIn).isSpectator()))
             {

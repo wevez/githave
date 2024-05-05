@@ -182,20 +182,6 @@ public class Backtrack extends Module {
 
     @Override
     public void onRender3D(Events.Render3D event) {
-        for (Entity e : mc.theWorld.loadedEntityList) {
-            if (e instanceof EntityLivingBase) {
-                ColorUtil.glColor(0xa0ff0000);
-                double x = e.posX, y = e.posY, z = e.posZ;
-                Render3DUtil.drawBoundingBox(
-                        x - e.width / 2,
-                        y,
-                        z - e.width / 2,
-                        x + e.width / 2,
-                        y + e.height,
-                        z + e.width / 2
-                );
-            }
-        }
         if (entity != null && entity.getEntityBoundingBox() != null && mc.thePlayer != null && mc.theWorld != null
                 && entity.realPosX != 0 && entity.realPosY != 0 && entity.realPosZ != 0 && entity.width != 0
                 && entity.height != 0) {
@@ -238,20 +224,19 @@ public class Backtrack extends Module {
                 if(entity == null || entity.width == 0 || entity.height == 0)return;
 
                 // TODO: ESP
-//                double x = entity.realPosX / 32D - mc.getRenderManager().renderPosX;
-//                double y = entity.realPosY / 32D - mc.getRenderManager().renderPosY;
-//                double z = entity.realPosZ / 32D - mc.getRenderManager().renderPosZ;
-//
-//                ColorUtil.glColor(0xa0ff0000);
-//                Render3DUtil.drawBoundingBox(
-//                        x - entity.width / 2,
-//                        y,
-//                        z - entity.width / 2,
-//                        x + entity.width / 2,
-//                        y + entity.height,
-//                        z + entity.width / 2
-//                );
-//                ColorUtil.resetColor();
+                double x = entity.realPosX / 32D;
+                double y = entity.realPosY / 32D;
+                double z = entity.realPosZ / 32D;
+
+                Render3DUtil.drawFilledBox(
+                        x - entity.width / 2,
+                        y,
+                        z - entity.width / 2,
+                        x + entity.width / 2,
+                        y + entity.height,
+                        z + entity.width / 2,
+                        0xa0ff0000
+                );
             }
         }
         super.onRender3D(event);
