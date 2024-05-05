@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 
 import githave.manager.RotationManager;
 import githave.util.AlgebraUtil;
+import githave.util.PlayerUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -236,7 +237,7 @@ public abstract class Entity implements ICommandSender
     {
         this.rotationYaw = yaw % 360.0F;
         this.rotationPitch = pitch % 360.0F;
-        if (this instanceof EntityPlayerSP) {
+        if (this instanceof EntityPlayerSP && !PlayerUtil.predicting) {
             RotationManager.virtualPitch = rotationPitch;
             RotationManager.virtualPrevPitch = rotationPitch;
             RotationManager.virtualPrevYaw = rotationYaw;
@@ -1064,7 +1065,7 @@ public abstract class Entity implements ICommandSender
         this.prevPosZ = this.posZ = z;
         this.prevRotationYaw = this.rotationYaw = yaw;
         this.prevRotationPitch = this.rotationPitch = pitch;
-        if (this instanceof EntityPlayerSP) {
+        if (this instanceof EntityPlayerSP && !PlayerUtil.predicting) {
             RotationManager.virtualPitch = rotationPitch;
             RotationManager.virtualPrevPitch = rotationPitch;
             RotationManager.virtualPrevYaw = rotationYaw;
@@ -1098,7 +1099,7 @@ public abstract class Entity implements ICommandSender
         this.lastTickPosZ = this.prevPosZ = this.posZ = z;
         this.rotationYaw = yaw;
         this.rotationPitch = pitch;
-        if (this instanceof EntityPlayerSP) {
+        if (this instanceof EntityPlayerSP && !PlayerUtil.predicting) {
             RotationManager.virtualPitch = rotationPitch;
             RotationManager.virtualPrevPitch = rotationPitch;
             RotationManager.virtualPrevYaw = rotationYaw;
@@ -1430,7 +1431,7 @@ public abstract class Entity implements ICommandSender
             this.prevPosZ = this.lastTickPosZ = this.posZ = nbttaglist.getDoubleAt(2);
             this.prevRotationYaw = this.rotationYaw = nbttaglist2.getFloatAt(0);
             this.prevRotationPitch = this.rotationPitch = nbttaglist2.getFloatAt(1);
-            if (this instanceof EntityPlayerSP) {
+            if (this instanceof EntityPlayerSP && !PlayerUtil.predicting) {
                 RotationManager.virtualPitch = rotationPitch;
                 RotationManager.virtualPrevPitch = rotationPitch;
                 RotationManager.virtualPrevYaw = rotationYaw;

@@ -13,6 +13,7 @@ import githave.util.data.BlockData;
 import githave.util.render.Render3DUtil;
 import net.minecraft.block.*;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
@@ -59,7 +60,7 @@ public class Scaffold extends Module {
     private int lastSlot;
 
     private BlockData data;
-    private int lastDataUpdateTicks;
+    public static boolean shouldScaffold;
 
     private int sameYPos;
 
@@ -102,6 +103,7 @@ public class Scaffold extends Module {
 
     @Override
     protected void onDisable() {
+        shouldScaffold = false;
         mc.thePlayer.inventory.currentItem = lastSlot;
         EntityPlayerSP.resetTimer.reset();
         positionAdjustFinished = false;
@@ -115,8 +117,14 @@ public class Scaffold extends Module {
         return !ItemUtil.invalidBlocks.contains(((ItemBlock) stack.getItem()).getBlock());
     }
 
+    private boolean adjustResetForJump;
+
     @Override
     public void onMovementInput(Events.MovementInput event) {
+        if (!MoveUtil.isMoving(event) && event.input.jump) shouldScaffold = true;
+        if (!shouldScaffold) {
+            return;
+        }
         if (MoveUtil.isMoving(event)) {
             int currentSlot = mc.thePlayer.inventory.currentItem;
             if (mc.thePlayer.inventory.getStackInSlot(currentSlot) == null || !(mc.thePlayer.inventory.getStackInSlot(currentSlot).getItem() instanceof ItemBlock)) {
@@ -131,10 +139,19 @@ public class Scaffold extends Module {
                         break;
                 }
             }
+        } else {
+            return;
         }
         event.moveFix = true;
         // TODO position adjustment for diagonal
         if (mode.getValue().equals("Polar")) {
+            if (event.input.jump)  {
+                positionAdjustFinished = true;
+                adjustResetForJump = true;
+            } else if (adjustResetForJump) {
+                adjustResetForJump = false;
+                positionAdjustFinished = false;
+            }
             if (!positionAdjustFinished) {
                 if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) {
                     sneakTimer.reset();
@@ -149,6 +166,7 @@ public class Scaffold extends Module {
                         event.input.sneak = false;
                     }
                 } else {
+                    event.input.moveStrafe = 1f;
                     positionAdjustFinished = true;
                 }
             }
@@ -188,6 +206,8 @@ public class Scaffold extends Module {
         return Math.abs(Math.round(RotationManager.virtualYaw / 90) * 90 - RotationManager.virtualYaw) > v;
     }
 
+    private int offGroundTick;
+
     private float[] calcRotationStd() {
         float yaw = RotationManager.virtualYaw + 180f;
         yaw = Math.round(yaw / 45) * 45;
@@ -216,9 +236,10 @@ public class Scaffold extends Module {
                     break;
             }
         }
-        float pitch = diagonal ? 76.2f : 75.8f;
+        float pitch = diagonal ? 76.2f : 76.2f;
+        System.out.println(RotationManager.virtualPitch);
 
-        if ((mode.getValue().equals("Polar") && mc.thePlayer.hurtTime != 0) || mode.getValue().equals("Intave")) {
+        if (offGroundTick > 4 || mode.getValue().equals("Intave")) {
             pitch = mc.thePlayer.rotationPitch;
             yaw = mc.thePlayer.rotationYaw;
             if (data != null && mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() == Blocks.air) {
@@ -227,7 +248,7 @@ public class Scaffold extends Module {
                     final float[] lastRotation = new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch };
                     float minPitchDiff = Float.MAX_VALUE, bestPitch = 0f;
                     float[] tempRotation = new float[] { mc.thePlayer.rotationYaw, 0f };
-                    for (float searchPitch = 70f; searchPitch < 90f; searchPitch += gcd) {
+                    for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
                         final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                         if (minPitchDiff < currentPitchDiff) continue;
                         tempRotation[1] = searchPitch;
@@ -244,7 +265,7 @@ public class Scaffold extends Module {
                     }
                     else {
                         tempRotation = RotationUtil.rotation(data.toBox().center());
-                        for (float searchPitch = 70f; searchPitch < 90f; searchPitch += gcd) {
+                        for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
                             final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                             if (minPitchDiff < currentPitchDiff) continue;
                             tempRotation[1] = searchPitch;
@@ -262,7 +283,7 @@ public class Scaffold extends Module {
                         }
                         else {
                             tempRotation = RotationUtil.rotation(AlgebraUtil.nearest(data.toBox()));
-                            for (float searchPitch = 70f; searchPitch < 90f; searchPitch += gcd) {
+                            for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
                                 final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                                 if (minPitchDiff < currentPitchDiff) continue;
                                 tempRotation[1] = searchPitch;
@@ -277,6 +298,8 @@ public class Scaffold extends Module {
                             if (minPitchDiff != Float.MAX_VALUE) {
                                 yaw = tempRotation[0];
                                 pitch = bestPitch;
+                            } else {
+                                System.out.println("NOT FOUND");
                             }
                         }
                     }
@@ -305,21 +328,38 @@ public class Scaffold extends Module {
 
     @Override
     public void onRotation(Events.Rotation event) {
-        if (lastDataUpdateTicks != mc.thePlayer.ticksExisted) {
-            lastDataUpdateTicks = mc.thePlayer.ticksExisted;
-            data = getBlockData();
+        Vec3 predicted = null;
+        boolean lastShouldScaffold = shouldScaffold;
+        shouldScaffold = true;
+//        {
+//            List<Vec3> positions = PlayerUtil.predict(5);
+//            predicted = positions.get(positions.size() - 1);
+//            shouldScaffold = true;
+//            for (int i = 0; i < 4; i++) {
+//                if (mc.theWorld.getBlockState(new BlockPos(predicted).add(0, -i, 0)).getBlock() != Blocks.air) {
+//                    shouldScaffold = false;
+//                    break;
+//                }
+//            }
+//        }
+        if (!shouldScaffold) {
+            if (lastShouldScaffold) mc.thePlayer.inventory.currentItem = lastSlot;
+            return;
         }
+        data = getBlockData();
         float[] rotation = calcRotationStd();
         if (Math.abs(MathHelper.wrapAngleTo180_float(rotation[0] - mc.thePlayer.rotationYaw)) > 1) {
             positionAdjustFinished = false;
             sneakTimer.reset();
         }
-        rotation = BypassRotation.getInstance().limitAngle(
-                new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
-                rotation,
-                0.1f,
-                0.1f
-        );
+        if (mode.getValue().equals("Polar")) {
+            rotation = BypassRotation.getInstance().limitAngle(
+                    new float[]{mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
+                    rotation,
+                    5f,
+                    1f
+            );
+        }
         if (rotation != null) {
             event.yaw = rotation[0];
             event.pitch = rotation[1];
@@ -334,16 +374,18 @@ public class Scaffold extends Module {
                 lastGroundPos = new BlockPos(mc.thePlayer).add(0, -1, 0);
                 airTimer.reset();
             }
+            if (!mc.thePlayer.onGround) offGroundTick++;
+            else offGroundTick = 0;
         }
         super.onUpdate(event);
     }
 
     @Override
-    public void onRenderGui(Events.PreRenderGui event) {
+    public void onRender3D(Events.Render3D event) {
         if (data != null) {
             switch (blockESP.getValue()) {
                 case "Fill":
-                    Render3DUtil.drawFilledBox(data.toBox(), 0x80FF0000);
+                    Render3DUtil.drawFilledBox(data.getPos().getX(), data.getPos().getY(), data.getPos().getZ(), data.getPos().getX() + 1, data.getPos().getY() + 1, data.getPos().getZ() + 1, -1);
                     break;
                 case "Outline":
                     Render3DUtil.drawOutlinedBox(data.toBox(), 0x80FF0000);
@@ -354,12 +396,12 @@ public class Scaffold extends Module {
                     break;
             }
         }
-        super.onRenderGui(event);
+        super.onRender3D(event);
     }
 
     private void rightClick(MovingObjectPosition objectPosition) {
         mc.rightClickDelayTimer = 0;
-        if (mc.thePlayer.isSneaking()) return;
+        if (!positionAdjustFinished && mc.thePlayer.onGround && mc.thePlayer.isSneaking()) return;
         if (mc.playerController.getIsHittingBlock()) return;
         if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) return;
         if (objectPosition == null || objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
@@ -389,8 +431,11 @@ public class Scaffold extends Module {
 
     @Override
     public void onTick(Events.Tick event) {
+        if (!shouldScaffold) {
+            return;
+        }
         mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
-        this.rightClick(mc  .objectMouseOver);
+        this.rightClick(mc.objectMouseOver);
         super.onTick(event);
     }
 
@@ -436,17 +481,15 @@ public class Scaffold extends Module {
                 && !mc.thePlayer.onGround) {
             BlockPos pos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ);
 //            if (jump.isEnabled()) {
-//                if (mc.gameSettings.keyBindJump.pressed) {
 //                    BlockPos bp = blockPos.add(0, 1, 0);
 //                    Vec3 vec4 = this.getBestHitFeet(bp);
 //                    positions.add(vec4);
 //                    hashMap.put(vec4, EnumFacing.UP);
-//                }
 //            } else {
-                BlockPos bp = blockPos.add(0, 1, 0);
-                Vec3 vec4 = this.getBestHitFeet(bp);
-                positions.add(vec4);
-                hashMap.put(vec4, EnumFacing.UP);
+//                BlockPos bp = blockPos.add(0, 1, 0);
+//                Vec3 vec4 = this.getBestHitFeet(bp);
+//                positions.add(vec4);
+//                hashMap.put(vec4, EnumFacing.UP);
 //            }
         }
         if (!isPosSolid(blockPos.add(1, 0, 0)) && !blockPos.add(1, 0, 0).equalsBlockPos(playerPos)) {

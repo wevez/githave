@@ -311,7 +311,7 @@ public class EntityPlayerSP extends AbstractClientPlayer
             lastRotationTick = mc.thePlayer.ticksExisted;
             float[] rot = {rotationEvent.yaw, rotationEvent.pitch};
             if (!resetTimer.hasTimeElapsed(500)) {
-                rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot, 10, 2);
+                rot = BypassRotation.getInstance().limitAngle(new float[] {mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch}, rot, 5, 2);
             }rot = RotationUtil.getFixedRotation(rot, new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch});
             this.rotationYaw = rot[0];
             this.rotationPitch = rot[1];

@@ -10,6 +10,6 @@ public class MoveUtil implements MCHook {
     }
 
     public static boolean isMoving(Events.MovementInput input) {
-        return input.input.jump || input.input.moveForward != 0 || input.input.moveStrafe != 0;
+        return input.input.moveForward != 0 || input.input.moveStrafe != 0;
     }
 }

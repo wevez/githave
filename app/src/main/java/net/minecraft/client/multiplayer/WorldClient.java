@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 
 import githave.GitHave;
 import githave.event.Events;
+import githave.util.PlayerUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -396,6 +397,7 @@ public class WorldClient extends World
 
     public void playSound(double x, double y, double z, String soundName, float volume, float pitch, boolean distanceDelay)
     {
+        if (PlayerUtil.predicting) return;
         double d0 = this.mc.getRenderViewEntity().getDistanceSq(x, y, z);
         PositionedSoundRecord positionedsoundrecord = new PositionedSoundRecord(new ResourceLocation(soundName), volume, pitch, (float)x, (float)y, (float)z);
 

@@ -56,7 +56,7 @@ public class WTap extends Module {
 
     @Override
     public void onMovementInput(Events.MovementInput event) {
-        if (KillAura.target != null && mc.thePlayer.getNearestDistanceToEntity(KillAura.target) < 2 && mc.thePlayer.hurtTime == 0 && mc.thePlayer.onGround && !mc.gameSettings.keyBindJump.isPressed() && !timer2.hasTimeElapsed((long) delay.getValue()) && timer.hasTimeElapsed(500) && mc.objectMouseOver.entityHit != null && mc.objectMouseOver.entityHit.hurtResistantTime > 0) {
+        if (KillAura.target != null && mc.objectMouseOver.entityHit != null) {
             event.input.moveForward = 0f;
             event.input.moveStrafe = 0;
         }

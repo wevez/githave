@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import de.florianmichael.viamcp.fixes.FixedSoundEngine;
+import githave.util.PlayerUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHopper;
 import net.minecraft.block.BlockLiquid;
@@ -998,6 +999,8 @@ public abstract class World implements IBlockAccess
 
     private void spawnParticle(int particleID, boolean p_175720_2_, double xCood, double yCoord, double zCoord, double xOffset, double yOffset, double zOffset, int... p_175720_15_)
     {
+        if (PlayerUtil.predicting) return;
+
         for (int i = 0; i < this.worldAccesses.size(); ++i)
         {
             ((IWorldAccess)this.worldAccesses.get(i)).spawnParticle(particleID, p_175720_2_, xCood, yCoord, zCoord, xOffset, yOffset, zOffset, p_175720_15_);

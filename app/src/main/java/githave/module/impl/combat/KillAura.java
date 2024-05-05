@@ -2,6 +2,7 @@ package githave.module.impl.combat;
 
 import githave.event.Events;
 import githave.manager.RotationManager;
+import githave.module.impl.movement.Scaffold;
 import githave.module.setting.impl.BooleanSetting;
 import githave.util.*;
 import githave.util.bypass.BypassRotation;
@@ -152,6 +153,9 @@ public class KillAura extends Module {
 
     @Override
     public void onTick(Events.Tick event) {
+        if (Scaffold.shouldScaffold) {
+            return;
+        }
         if (target == null) return;
         final boolean tick = this.cpsTimer.onTick();
         switch (clickMode.getValue()) {
@@ -200,6 +204,9 @@ public class KillAura extends Module {
 
     @Override
     public void onRotation(Events.Rotation event) {
+        if (Scaffold.shouldScaffold) {
+            return;
+        }
         updateTarget();
         if (target == null) {
             unblock();
@@ -226,6 +233,9 @@ public class KillAura extends Module {
 
     @Override
     public void onSendPacket(Events.SendPacket event) {
+        if (Scaffold.shouldScaffold) {
+            return;
+        }
         if (rotateMethod.getValue().equals("Packet") && event.packet instanceof C03PacketPlayer) {
             C03PacketPlayer packet = (C03PacketPlayer) event.packet;
             if (currentRotation != null) {

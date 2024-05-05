@@ -1,6 +1,7 @@
 package githave.module;
 
 import githave.module.impl.combat.*;
+import githave.module.impl.misc.Debug;
 import githave.module.impl.movement.*;
 import githave.module.impl.player.*;
 import githave.module.impl.render.*;
@@ -33,7 +34,9 @@ public class ModuleManager {
             new ESP(),
             new HUD(),
             new ModuleList(),
-            new TargetHUD()
+            new TargetHUD(),
+            // Misc
+            new Debug()
     );
 
     public void init() {

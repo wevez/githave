@@ -11,6 +11,7 @@ import de.florianmichael.viamcp.ViaMCP;
 import githave.GitHave;
 import githave.event.Events;
 import githave.manager.RotationManager;
+import githave.util.PlayerUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
@@ -193,8 +194,10 @@ public class NetworkManager extends SimpleChannelInboundHandler<Packet>
 
     public void sendPacket(Packet packetIn)
     {
+        if (PlayerUtil.predicting) return;
         if (this.isChannelOpen())
         {
+
             Events.SendPacket event = new Events.SendPacket(true, packetIn);
             GitHave.INSTANCE.eventManager.call(event);
             if (event.isCanceled()) return;
