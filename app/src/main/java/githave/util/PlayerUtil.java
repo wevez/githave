@@ -14,6 +14,39 @@ public class PlayerUtil implements MCHook {
 
     public static boolean predicting = false;
 
+    // TODO: predict movement input
+    public static List<Vec3> predict(Entity entity, int tick) {
+        predicting = true;
+        List<Vec3> positions = new ArrayList<>();
+        EntityPlayerSP sp = new EntityPlayerSP(
+                mc,
+                mc.theWorld,
+                mc.getNetHandler(),
+                new StatFileWriter()
+        );
+        sp.setPositionAndRotation(entity.posX, entity.posY, entity.posZ, entity.rotationYaw, entity.rotationPitch);
+        sp.onGround = entity.onGround;
+        sp.setSprinting(entity.isSprinting());
+        sp.setSneaking(entity.isSneaking());
+        sp.motionX = entity.motionX;
+        sp.motionY = entity.motionY;
+        sp.motionZ = entity.motionZ;
+        sp.movementInput = new MovementInputFromOptions(mc.gameSettings);
+        for (int i = 0; i < tick; i++) {
+            sp.movementInput.moveStrafe = mc.thePlayer.movementInput.moveStrafe;
+            sp.movementInput.moveForward = mc.thePlayer.movementInput.moveForward;
+            sp.movementInput.jump = mc.thePlayer.movementInput.jump;
+            sp.movementInput.sneak = mc.thePlayer.movementInput.sneak;
+            sp.moveForward = mc.thePlayer.moveForward;
+            sp.moveStrafing = mc.thePlayer.moveStrafing;
+            sp.setJumping(mc.thePlayer.movementInput.jump);
+            sp.onUpdate();
+            positions.add(new Vec3(sp.posX, sp.posY, sp.posZ));
+        }
+        predicting = false;
+        return positions;
+    }
+
     public static List<Vec3> predict(int tick) {
         predicting = true;
         List<Vec3> positions = new ArrayList<>();
