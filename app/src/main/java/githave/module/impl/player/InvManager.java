@@ -49,6 +49,60 @@ public class InvManager extends Module {
         super.onEnable();
     }
 
+    @Override
+    public void onUpdate(Events.Update event) {
+//        if (!event.pre) return;
+//        if (mc.currentScreen != null) {
+//            return;
+//        }
+//
+//        if (timer.hasTimeElapsed(currentDelay)) {
+//            currentDelay = RandomUtil.nextInt((int) minDelay.getValue(), (int) maxDelay.getValue());
+//            if (openInv.getValue() && !(this.mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiInventory))
+//                return;
+//
+//            for (int type = 1; type < 5; type++) {
+//                if (mc.thePlayer.inventoryContainer.getSlot(4 + type).getHasStack()) {
+//                    ItemStack is = mc.thePlayer.inventoryContainer.getSlot(4 + type).getStack();
+//
+//                    if (isBestArmor(is, type))
+//                        continue;
+//
+//                    InventoryUtils.openInv(mode.getMode());
+//                    InventoryUtils.drop(4 + type);
+//
+//                    InventoryUtils.timer.reset();
+//                    if (speed.getValue() != 0)
+//                        break;
+//                }
+//            }
+//            for (int type = 1; type < 5; type++) {
+//                if (InventoryUtils.timer.getTime() > speed.getValue()) {
+//                    for (int i = 9; i < 45; i++) {
+//                        if (mc.thePlayer.inventoryContainer.getSlot(i).getHasStack()) {
+//                            ItemStack is = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
+//                            if (InventoryUtils.getProtection(is) > 0.0F) {
+//                                if (InventoryUtils.isBestArmor(is, type)
+//                                        && !InventoryUtils.isBadStack(is, true, true)) {
+//                                    InventoryUtils.openInv(mode.getMode());
+//                                    InventoryUtils.shiftClick(i);
+//
+//                                    InventoryUtils.timer.reset();
+//                                    if (speed.getValue() != 0)
+//                                        break;
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        if (InventoryUtils.timer.getTime() > 75) {
+//            InventoryUtils.closeInv(mode.getMode());
+//        }
+        super.onUpdate(event);
+    }
+
     private static boolean isBestArmor(ItemStack stack, int type)
     {
         float prot = ItemUtil.getProtection(stack);

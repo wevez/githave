@@ -2,6 +2,7 @@ package githave.util;
 
 import githave.MCHook;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
 import net.minecraft.stats.StatFileWriter;
 import net.minecraft.util.MovementInputFromOptions;
 import net.minecraft.util.MovingObjectPosition;

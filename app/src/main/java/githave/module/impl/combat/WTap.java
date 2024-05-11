@@ -3,12 +3,16 @@ package githave.module.impl.combat;
 import githave.event.Events;
 import githave.module.Module;
 import githave.module.ModuleCategory;
+import githave.module.setting.impl.BooleanSetting;
 import githave.module.setting.impl.DoubleSetting;
 import githave.module.setting.impl.ModeSetting;
+import githave.util.PlayerUtil;
 import githave.util.TimerUtil;
 import net.minecraft.network.play.client.C02PacketUseEntity;
+import net.minecraft.util.Vec3;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class WTap extends Module {
 
@@ -17,13 +21,13 @@ public class WTap extends Module {
 
     private final BooleanSetting keepDistance = new BooleanSetting.Builder("Keep Distance")
         .value(true)
-        .builder();
+        .build();
 
     private final DoubleSetting keepRange = new DoubleSetting.Builder("Keep Range", 2.5, 0, 8, 0.1)
         .visibility(keepDistance::getValue)
         .build();
 
-    private long currentCombodelay, lastComboTime;
+    private long currentComboDelay, lastComboTime;
 
     private boolean yeah;
 
@@ -62,7 +66,7 @@ public class WTap extends Module {
             if (yeah) {
                 yeah = false;
                 final long currentTime = System.currentTimeMillis();
-                currentCombodelay = lastComboTime - currentTime;
+                currentComboDelay = lastComboTime - currentTime;
                 lastComboTime = currentTime;
             }
         } else {
@@ -74,9 +78,9 @@ public class WTap extends Module {
     @Override
     public void onMovementInput(Events.MovementInput event) {
         if (KillAura.target == null) return;
-        final int nextAttackTick = (int) (System.currentTimeMillis() - (lastComboTime + currentComboDelay) / 50;
+        final int nextAttackTick = (int) (System.currentTimeMillis() - (lastComboTime + currentComboDelay)) / 50;
         if (nextAttackTick <= 0) return;
-        final int tikcs = 10;
+        final int ticks = 5;
         final List<Vec3> positions = PlayerUtil.predict(ticks);
         final List<Vec3> enemyPositions = PlayerUtil.predict(KillAura.target, ticks);
         boolean shouldStop = false;
@@ -85,7 +89,7 @@ public class WTap extends Module {
             final boolean shouldInRange = i >= nextAttackTick;
             if (shouldInRange) {
                 if (p.distanceTo(e) > this.keepRange.getValue()) {
-                    shouldStop = false;
+//                    shouldStop = false;
                     break;
                 }
             } else {

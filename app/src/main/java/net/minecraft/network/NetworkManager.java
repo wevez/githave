@@ -43,6 +43,9 @@ import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.SecretKey;
 
+import me.ksyz.accountmanager.gui.GuiAccountManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;

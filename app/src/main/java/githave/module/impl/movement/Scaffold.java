@@ -18,7 +18,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.util.*;
 import org.lwjgl.input.Keyboard;
 
@@ -60,7 +62,6 @@ public class Scaffold extends Module {
     private int lastSlot;
 
     private BlockData data;
-    public static boolean shouldScaffold;
 
     private int sameYPos;
 
@@ -103,7 +104,6 @@ public class Scaffold extends Module {
 
     @Override
     protected void onDisable() {
-        shouldScaffold = false;
         mc.thePlayer.inventory.currentItem = lastSlot;
         EntityPlayerSP.resetTimer.reset();
         positionAdjustFinished = false;
@@ -121,9 +121,9 @@ public class Scaffold extends Module {
 
     @Override
     public void onMovementInput(Events.MovementInput event) {
-        if (MoveUtil.isMoving(event)) {
+        if (true) {
             int currentSlot = mc.thePlayer.inventory.currentItem;
-            if (mc.thePlayer.inventory.getStackInSlot(currentSlot) == null || !(mc.thePlayer.inventory.getStackInSlot(currentSlot).getItem() instanceof ItemBlock)) {
+            if (!isGoodBlock(mc.thePlayer.inventory.getStackInSlot(currentSlot))) {
                 switch (itemSpoof.getValue()) {
                     case "Switch":
                         for (int i = 0; i < 9; i++) {
@@ -145,7 +145,7 @@ public class Scaffold extends Module {
                 }
                 event.input.sneak = true;
                 if (!isDiagonal()) {
-                    if (sneakTimer.hasTimeElapsed(250)) {
+                    if (sneakTimer.hasTimeElapsed(150)) {
                         if (sneakTimer.hasTimeElapsed(500)) {
                             positionAdjustFinished = true;
                             event.input.sneak = false;
@@ -161,9 +161,9 @@ public class Scaffold extends Module {
             }
         }
         if (!sneakTimer.hasTimeElapsed(150)) {
-//            event.input.sneak = true;
-//            event.input.moveForward = 0f;
-//            event.input.moveStrafe = 0f;
+            event.input.sneak = true;
+            event.input.moveForward = 0f;
+            event.input.moveStrafe = 0f;
         }
 //        if (mode.getValue().equals("Intave")) {
 //            if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer,
@@ -227,8 +227,7 @@ public class Scaffold extends Module {
                     break;
             }
         }
-        float pitch = diagonal ? 76.2f : 75.8f;
-//        System.out.println(RotationManager.virtualPitch);
+        float pitch = diagonal ? 76.2f : 75.6f;
 
         if (mode.getValue().equals("Intave")) {
             pitch = mc.thePlayer.rotationPitch;
@@ -239,7 +238,7 @@ public class Scaffold extends Module {
                     final float[] lastRotation = new float[] { mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch };
                     float minPitchDiff = Float.MAX_VALUE, bestPitch = 0f;
                     float[] tempRotation = new float[] { mc.thePlayer.rotationYaw, 0f };
-                    for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
+                    for (float searchPitch = 0; searchPitch < 90f; searchPitch += gcd) {
                         final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                         if (minPitchDiff < currentPitchDiff) continue;
                         tempRotation[1] = searchPitch;
@@ -256,7 +255,7 @@ public class Scaffold extends Module {
                     }
                     else {
                         tempRotation = RotationUtil.rotation(data.toBox().center());
-                        for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
+                        for (float searchPitch = 0; searchPitch < 90f; searchPitch += gcd) {
                             final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                             if (minPitchDiff < currentPitchDiff) continue;
                             tempRotation[1] = searchPitch;
@@ -274,7 +273,7 @@ public class Scaffold extends Module {
                         }
                         else {
                             tempRotation = RotationUtil.rotation(AlgebraUtil.nearest(data.toBox()));
-                            for (float searchPitch = 10f; searchPitch < 90f; searchPitch += gcd) {
+                            for (float searchPitch = 0; searchPitch < 90f; searchPitch += gcd) {
                                 final float currentPitchDiff = Math.abs(searchPitch - mc.thePlayer.rotationPitch);
                                 if (minPitchDiff < currentPitchDiff) continue;
                                 tempRotation[1] = searchPitch;
@@ -297,7 +296,7 @@ public class Scaffold extends Module {
                 }
             }
             pitchStack += Math.abs(mc.thePlayer.rotationPitch - pitch);
-            if (Math.abs(MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - yaw)) > 22.5f || pitchStack > 30f) {
+            if (Math.abs(MathHelper.wrapAngleTo180_float(mc.thePlayer.rotationYaw - yaw)) > 22.5f || pitchStack > 15f) {
                 sneakTimer.reset();
                 pitchStack = 0;
             }
@@ -319,24 +318,6 @@ public class Scaffold extends Module {
 
     @Override
     public void onRotation(Events.Rotation event) {
-        Vec3 predicted = null;
-        boolean lastShouldScaffold = shouldScaffold;
-        shouldScaffold = true;
-//        {
-//            List<Vec3> positions = PlayerUtil.predict(5);
-//            predicted = positions.get(positions.size() - 1);
-//            shouldScaffold = true;
-//            for (int i = 0; i < 4; i++) {
-//                if (mc.theWorld.getBlockState(new BlockPos(predicted).add(0, -i, 0)).getBlock() != Blocks.air) {
-//                    shouldScaffold = false;
-//                    break;
-//                }
-//            }
-//        }
-        if (!shouldScaffold) {
-            if (lastShouldScaffold) mc.thePlayer.inventory.currentItem = lastSlot;
-            return;
-        }
         data = getBlockData();
         float[] rotation = calcRotationStd();
         if (Math.abs(MathHelper.wrapAngleTo180_float(rotation[0] - mc.thePlayer.rotationYaw)) > 1) {
@@ -347,9 +328,16 @@ public class Scaffold extends Module {
             rotation = BypassRotation.getInstance().limitAngle(
                     new float[]{mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
                     rotation,
-                    5f,
-                    1f
+                    10f,
+                    2f
             );
+        } else if (mode.getValue().equals("Intave")) {
+//            rotation = BypassRotation.getInstance().limitAngle(
+//                    new float[]{mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch},
+//                    rotation,
+//                    5f,
+//                    0.1f
+//            );
         }
         if (rotation != null) {
 //            System.out.println(rotation[0]);
@@ -391,8 +379,9 @@ public class Scaffold extends Module {
         super.onRender3D(event);
     }
 
-    private void rightClick(MovingObjectPosition objectPosition) {
-//        mc.rightClickDelayTimer = 0;
+    @Override
+    public void onRenderGui(Events.PreRenderGui event) {
+        MovingObjectPosition objectPosition = mc.thePlayer.rayTrace(3, 1);
         if (!positionAdjustFinished) return;
         if (mc.thePlayer.isSneaking()) return;
         if (mc.playerController.getIsHittingBlock()) return;
@@ -407,27 +396,53 @@ public class Scaffold extends Module {
         float y = (float) (objectPosition.hitVec.yCoord - objectPosition.getBlockPos().getY());
         float z = (float) (objectPosition.hitVec.zCoord - objectPosition.getBlockPos().getZ());
 //        final boolean tick = (!dragClickTimer.hasTimeElapsed(50) || dragClickTimer.hasTimeElapsed(100)) && !dragClickTimer.hasTimeElapsed(500);
-        if (mc.thePlayer.getHeldItem().getItem().onItemUse(mc.thePlayer.getHeldItem(), mc.thePlayer, mc.theWorld, objectPosition.getBlockPos(), objectPosition.sideHit,
-                x, y,z)) {
-            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(objectPosition.getBlockPos(), objectPosition.sideHit.getIndex(), mc.thePlayer.inventory.getCurrentItem(), x, y, z));
-            mc.thePlayer.swingItem();
-            if (objectPosition.sideHit != EnumFacing.UP) placeCounter++;
-            clickTimer.reset();
-            mc.rightClickDelayTimer = 4;
-            dragClickTimer.reset();
-        } else {
-            if (mode.getValue().equals("Polar")) {
-                mc.rightClickMouse();
-            }
-        }
+//        if (mc.thePlayer.getHeldItem().getItem().onItemUse(mc.thePlayer.getHeldItem(), mc.thePlayer, mc.theWorld, objectPosition.getBlockPos(), objectPosition.sideHit,
+//                x, y,z)) {
+//            mc.fontRendererObj.drawString("Scaffold", 20, 20, -1);
+//        } else {
+//            if (mode.getValue().equals("Polar")) {
+//                mc.fontRendererObj.drawString("Scaffold", 20, 20, -1);
+//            }
+//        }
+        super.onRenderGui(event);
+    }
+
+    private void rightClick(MovingObjectPosition objectPosition) {
+        mc.rightClickDelayTimer = 0;
+//        if (!positionAdjustFinished) return;
+//        if (mc.thePlayer.isSneaking()) return;
+        if (mc.playerController.getIsHittingBlock()) return;
+        if (mc.theWorld.getBlockState(new BlockPos(mc.thePlayer).add(0, -1, 0)).getBlock() != Blocks.air) return;
+        if (objectPosition == null || objectPosition.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return;
+        if (mc.theWorld.getBlockState(objectPosition.getBlockPos()).getBlock() == Blocks.air) return;
+        if (mc.thePlayer.getHeldItem() == null) return;
+        if (!(mc.thePlayer.getHeldItem().getItem() instanceof ItemBlock)) return;
+        if (!mc.thePlayer.onGround && objectPosition.hitVec.yCoord >= mc.thePlayer.posY) return;
+        if (!isGood(objectPosition)) return;
+        float x = (float) (objectPosition.hitVec.xCoord - objectPosition.getBlockPos().getX());
+        float y = (float) (objectPosition.hitVec.yCoord - objectPosition.getBlockPos().getY());
+        float z = (float) (objectPosition.hitVec.zCoord - objectPosition.getBlockPos().getZ());
+//        final boolean tick = (!dragClickTimer.hasTimeElapsed(50) || dragClickTimer.hasTimeElapsed(100)) && !dragClickTimer.hasTimeElapsed(500);
+//        if (mc.thePlayer.getHeldItem().getItem().onItemUse(mc.thePlayer.getHeldItem(), mc.thePlayer, mc.theWorld, objectPosition.getBlockPos(), objectPosition.sideHit,
+//                x, y,z)) {
+//            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(objectPosition.getBlockPos(), objectPosition.sideHit.getIndex(), mc.thePlayer.inventory.getCurrentItem(), x, y, z));
+//            mc.thePlayer.swingItem();
+//            if (objectPosition.sideHit != EnumFacing.UP) placeCounter++;
+//            clickTimer.reset();
+//            mc.rightClickDelayTimer = 4;
+//            dragClickTimer.reset();
+//        } else {
+//            if (mode.getValue().equals("Polar")) {
+//                mc.rightClickMouse();
+//            }
+//        }
+        if (objectPosition.sideHit != EnumFacing.UP) placeCounter++;
+        mc.rightClickMouse();
     }
 
     @Override
     public void onTick(Events.Tick event) {
-        if (!shouldScaffold) {
-            return;
-        }
-        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
+//        mc.objectMouseOver = mc.thePlayer.rayTrace(3, 1f);
         this.rightClick(mc.objectMouseOver);
         super.onTick(event);
     }
@@ -474,10 +489,10 @@ public class Scaffold extends Module {
                 && !mc.thePlayer.onGround) {
             BlockPos pos = new BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ);
 //            if (jump.isEnabled()) {
-//                    BlockPos bp = blockPos.add(0, 1, 0);
-//                    Vec3 vec4 = this.getBestHitFeet(bp);
-//                    positions.add(vec4);
-//                    hashMap.put(vec4, EnumFacing.UP);
+                    BlockPos bp = blockPos.add(0, 1, 0);
+                    Vec3 vec4 = this.getBestHitFeet(bp);
+                    positions.add(vec4);
+                    hashMap.put(vec4, EnumFacing.UP);
 //            } else {
 //                BlockPos bp = blockPos.add(0, 1, 0);
 //                Vec3 vec4 = this.getBestHitFeet(bp);
