@@ -1,7 +1,6 @@
 package githave.module.impl.combat;
 
 import com.mojang.authlib.GameProfile;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import githave.event.EventArgument;
 import githave.event.Events;
 import githave.module.Module;

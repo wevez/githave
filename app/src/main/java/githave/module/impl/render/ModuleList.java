@@ -6,7 +6,6 @@ import githave.gui.font.TTFFontRenderer;
 import githave.module.Module;
 import githave.module.ModuleCategory;
 import githave.util.animation.AnimationUtil;
-import githave.util.animation.EaseOutAnimation;
 import githave.util.animation.LinearAnimation;
 import net.minecraft.client.gui.ScaledResolution;
 
@@ -47,7 +46,7 @@ public class ModuleList extends Module {
         for (int i = 0; i < animationsX.length; i++) {
             AnimationUtil x = animationsX[i];
             Module m = sortedList.get(i);
-            x.uodate(m.isToggled() ? 0.1 : -0.1);
+            x.update(m.isToggled() ? 0.1 : -0.1);
             double percent = x.calcPercent();
             if (percent == 0) continue;
             double height = percent * 16;

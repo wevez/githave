@@ -54,7 +54,7 @@ public class ClickGui extends GuiScreen {
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         this.partialTicks = partialTicks;
-        double per = animationUtil.uodate(0.05).calcPercent();
+        double per = animationUtil.update(0.05).calcPercent();
         GlStateManager.pushMatrix();
         Render2DUtil.setAlphaLimit((float) per);
         GlStateManager.translate(mc.displayWidth / 4, mc.displayHeight / 4, 0);

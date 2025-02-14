@@ -6,7 +6,7 @@ public abstract class AnimationUtil {
 
     protected double tick;
 
-    public AnimationUtil uodate(double speed) {
+    public AnimationUtil update(double speed) {
         tick += speed;
         // MathHelper.clamp makes bugs
         tick = Math.min(tick, 1);

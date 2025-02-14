@@ -14,7 +14,6 @@ import githave.util.render.StencilUtil;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static githave.util.render.Render2DUtil.*;
@@ -66,7 +65,7 @@ public class ClickGuiWindow {
         for (int i = 0; i < modules.size(); i++) {
             Module m = modules.get(i);
             rect(x, offset, 125, 18, 0xff1D1D21);
-            m.toggleAnimation.uodate(m.isToggled() ? 0.05 : -0.05);
+            m.toggleAnimation.update(m.isToggled() ? 0.05 : -0.05);
             mini.drawCenteredString(m.getName(), x + 62.5f, offset + 5, ColorUtil.interpolateColor(0xffE0DFE2, getColor(), (float) m.toggleAnimation.calcPercent()));
             offset += 18;
             if (!mExpand[i]) continue;
@@ -76,7 +75,7 @@ public class ClickGuiWindow {
                     setting.drawString(s.getName(), x + 5, offset + 7, 0xffE0DFE2);
                     rect(x + 100, offset + 4, 20, 10, 0xff3C3941);
                     final BooleanSetting bs = (BooleanSetting) s;
-                    rect(x + 102 + 10 * s.animation.uodate(bs.getValue() ? -0.1 : 0.1).calcPercent(),
+                    rect(x + 102 + 10 * s.animation.update(bs.getValue() ? -0.1 : 0.1).calcPercent(),
                             offset + 2, 6, 14, ColorUtil.interpolateColor(getColor(), 0xff3C3941, (float) s.animation.calcPercent()));
                     offset += 18;
                 } else if (s instanceof DoubleSetting) {
@@ -99,7 +98,7 @@ public class ClickGuiWindow {
                     offset += 18;
                     ModeSetting ms = (ModeSetting) s;
                     float cpOffset = offset;
-                    float p = (float) s.animation.uodate(ms.expand ? 0.1 : -0.1).calcPercent();
+                    float p = (float) s.animation.update(ms.expand ? 0.1 : -0.1).calcPercent();
                     StencilUtil.initStencilToWrite();
                     rect(x, offset, 125, 14 * ms.getOption().length * p, -1);
                     StencilUtil.readStencilBuffer();
@@ -120,7 +119,7 @@ public class ClickGuiWindow {
                     offset += 18;
                     MultiBooleanSetting ms = (MultiBooleanSetting) s;
                     float cpOffset = offset;
-                    float p = (float) s.animation.uodate(ms.expand ? 0.1 : -0.1).calcPercent();
+                    float p = (float) s.animation.update(ms.expand ? 0.1 : -0.1).calcPercent();
                     StencilUtil.initStencilToWrite();
                     rect(x, offset, 125, 14 * ms.getValue().size() * p, -1);
                     StencilUtil.readStencilBuffer();
